@@ -18,85 +18,86 @@ export default function Conversion(props) {
     "unset"
   );
   return (
-    <Card p='20px' align='center' direction='column' w='100%' {...rest}>
+    <Card p='8px' align='center' direction='column' w='100%' {...rest}>
       <Flex
-        px={{ base: "0px", "2xl": "10px" }}
+        px={{ base: "0px", "2xl": "8px" }}
         justifyContent='space-between'
         alignItems='center'
         w='100%'
-        mb='8px'>
-        <Text color={textColor} fontSize='md' fontWeight='600' mt='4px'>
+        mb='6px'>
+        <Text color={textColor} fontSize='md' fontWeight='700' mt='1px'>
           Quiz completion rate
         </Text>
       </Flex>
 
       <PieChart
-        h='100%'
+        h='200px'
         w='100%'
         chartData={pieChartData}
         chartOptions={pieChartOptions}
       />
       <Card
         bg='#6E47FF'
-        borderRadius='16px'
-        flexDirection={{ base: 'column', md: 'row' }}
+        borderRadius='8px'
+        flexDirection='row'
         boxShadow={cardShadow}
-        w='100%'
-        p='15px'
-        px='20px'
-        mt='15px'
+        w={{ base: '100%', md: '80%' }}
+        p='6px'
+        px='8px'
+        mt='8px'
+        mb={{ base: '10px', md: '20px' }}
         mx='auto'
-        alignItems={{ base: 'stretch', md: 'center' }}
+        alignItems='center'
         justifyContent='space-between'
         flexWrap='wrap'>
-        <Flex direction='column' py='5px' alignItems='flex-start' w={{ base: '100%', md: 'auto' }} mb={{ base: '12px', md: '0' }}>
+        <Flex direction='column' py='1px' alignItems='center' flex='1' minW={{ base: '80px', md: 'auto' }} mb={{ base: '6px', md: '0' }}>
           <Flex align='center'>
-            <Box h='10px' w='10px' bg='white' borderRadius='50%' me='8px' />
+            <Box h='6px' w='6px' bg='white' borderRadius='50%' me='4px' />
             <Text
-              fontSize={{ base: 'sm', md: 'sm' }}
-              color='rgba(255,255,255,0.8)'
+              fontSize={{ base: '9px', md: '10px' }}
+              color='rgba(255,255,255,0.85)'
               fontWeight='600'
-              mb='5px'>
+              mb='2px'>
               Not started
             </Text>
           </Flex>
-          <Text fontSize={{ base: 'xl', md: '2xl' }} color='black' fontWeight='800'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
             23%
           </Text>
         </Flex>
 
-        <VSeparator display={{ base: 'none', md: 'block' }} mx={{ base: '0', md: '24px' }} />
+        <VSeparator display={{ base: 'none', md: 'block' }} mx={{ base: '0', md: '8px' }} />
 
-        <Flex direction='column' py='5px' alignItems={{ base: 'flex-start', md: 'center' }} w={{ base: '100%', md: 'auto' }} mb={{ base: '12px', md: '0' }}>
+        <Flex direction='column' py='1px' alignItems='center' flex='1' minW={{ base: '80px', md: 'auto' }} mb={{ base: '6px', md: '0' }}>
           <Flex align='center'>
-            <Box h='10px' w='10px' bg='#4318FF' borderRadius='50%' me='8px' />
+            <Box h='6px' w='6px' bg='#4318FF' borderRadius='50%' me='4px' />
             <Text
-              fontSize={{ base: 'sm', md: 'sm' }}
+              fontSize={{ base: '9px', md: '10px' }}
               color='rgba(255,255,255,0.9)'
               fontWeight='600'
-              mb='5px'>
+              mb='2px'>
               In progress
             </Text>
           </Flex>
-          <Text fontSize={{ base: 'xl', md: '2xl' }} color='black' fontWeight='800'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
             65%
           </Text>
         </Flex>
 
-        <VSeparator display={{ base: 'none', md: 'block' }} mx={{ base: '0', md: '24px' }} />
+        <VSeparator display={{ base: 'none', md: 'block' }} mx={{ base: '0', md: '8px' }} />
 
-        <Flex direction='column' py='5px' alignItems={{ base: 'flex-start', md: 'flex-end' }} w={{ base: '100%', md: 'auto' }}>
+        <Flex direction='column' py='1px' alignItems='center' flex='1' minW={{ base: '80px', md: 'auto' }}>
           <Flex align='center'>
-            <Box h='10px' w='10px' bg='#6AD2FF' borderRadius='50%' me='8px' />
+            <Box h='6px' w='6px' bg='#6AD2FF' borderRadius='50%' me='4px' />
             <Text
-              fontSize={{ base: 'sm', md: 'sm' }}
+              fontSize={{ base: '9px', md: '10px' }}
               color='rgba(255,255,255,0.9)'
               fontWeight='600'
-              mb='5px'>
+              mb='2px'>
               Completed
             </Text>
           </Flex>
-          <Text fontSize={{ base: 'xl', md: '2xl' }} color='black' fontWeight='800'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
             12%
           </Text>
         </Flex>

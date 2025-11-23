@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Flex,
-  Progress,
   Table,
   Tbody,
   Td,
@@ -26,8 +25,8 @@ import * as React from 'react';
 
 const columnHelper = createColumnHelper();
 
-export default function TopCreatorTable(props) {
-  const { tableData, title = 'Top Creators' } = props;
+export default function TopDiligentTable(props) {
+  const { tableData } = props;
   const [sorting, setSorting] = React.useState([]);
   const textColor = useColorModeValue('secondaryGray.900', 'white');
   const textColorSecondary = useColorModeValue('secondaryGray.600', 'white');
@@ -55,8 +54,8 @@ export default function TopCreatorTable(props) {
         </Flex>
       ),
     }),
-    columnHelper.accessor('artworks', {
-      id: 'artworks',
+    columnHelper.accessor('usage', {
+      id: 'usage',
       header: () => (
         <Text
           justifyContent="space-between"
@@ -64,37 +63,13 @@ export default function TopCreatorTable(props) {
           fontSize={{ sm: '10px', lg: '12px' }}
           color="gray.400"
         >
-          ARTWORKS
+          USAGE
         </Text>
       ),
       cell: (info) => (
         <Text color={textColorSecondary} fontSize="sm" fontWeight="500">
           {info.getValue()}
         </Text>
-      ),
-    }),
-    columnHelper.accessor('rating', {
-      id: 'rating',
-      header: () => (
-        <Text
-          justifyContent="space-between"
-          align="center"
-          fontSize={{ sm: '10px', lg: '12px' }}
-          color="gray.400"
-        >
-          RATING
-        </Text>
-      ),
-      cell: (info) => (
-        <Flex align="center">
-          <Progress
-            variant="table"
-            colorScheme="brandScheme"
-            h="8px"
-            w="108px"
-            value={info.getValue()}
-          />
-        </Flex>
       ),
     }),
   ];
@@ -126,7 +101,7 @@ export default function TopCreatorTable(props) {
         boxShadow="0px 40px 58px -20px rgba(112, 144, 176, 0.26)"
       >
         <Text color={textColor} fontSize="xl" fontWeight="600">
-          {title}
+          Top Diligent
         </Text>
         <Button variant="action">See all</Button>
       </Flex>

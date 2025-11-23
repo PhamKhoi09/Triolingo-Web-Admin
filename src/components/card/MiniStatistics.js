@@ -14,7 +14,7 @@ import Card from "components/card/Card.js";
 import React from "react";
 
 export default function Default(props) {
-  const { startContent, endContent, name, growth, value } = props;
+  const { startContent, endContent, name, growth, value, reverse } = props;
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const textColorSecondary = "secondaryGray.600";
 
@@ -28,21 +28,43 @@ export default function Default(props) {
         {startContent}
 
         <Stat my='auto' ms={startContent ? "18px" : "0px"}>
-          <StatLabel
-            lineHeight='100%'
-            color={textColorSecondary}
-            fontSize={{
-              base: "sm",
-            }}>
-            {name}
-          </StatLabel>
-          <StatNumber
-            color={textColor}
-            fontSize={{
-              base: "2xl",
-            }}>
-            {value}
-          </StatNumber>
+          {reverse ? (
+            <>
+              <StatNumber
+                color={textColor}
+                fontSize={{
+                  base: "2xl",
+                }}>
+                {value}
+              </StatNumber>
+              <StatLabel
+                lineHeight='100%'
+                color={textColorSecondary}
+                fontSize={{
+                  base: "sm",
+                }}>
+                {name}
+              </StatLabel>
+            </>
+          ) : (
+            <>
+              <StatLabel
+                lineHeight='100%'
+                color={textColorSecondary}
+                fontSize={{
+                  base: "sm",
+                }}>
+                {name}
+              </StatLabel>
+              <StatNumber
+                color={textColor}
+                fontSize={{
+                  base: "2xl",
+                }}>
+                {value}
+              </StatNumber>
+            </>
+          )}
           {growth ? (
             <Flex align='center'>
               <Text color='green.500' fontSize='xs' fontWeight='700' me='5px'>

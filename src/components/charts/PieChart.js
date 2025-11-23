@@ -24,8 +24,8 @@ class PieChart extends React.Component {
         options={this.state.chartOptions}
         series={this.state.chartData}
         type='pie'
-        width='100%'
-        height='55%'
+        width={this.props.w || this.props.width || '100%'}
+        height={this.props.h || this.props.height || '55%'}
       />
     );
   }

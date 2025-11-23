@@ -43,24 +43,16 @@ import {
   MdAttachMoney,
   MdBarChart,
   MdFileCopy,
+  MdPerson,
 } from "react-icons/md";
-import CheckTable from "views/admin/default/components/CheckTable";
-import ComplexTable from "views/admin/default/components/ComplexTable";
+// Other components
 import DailyTraffic from "views/admin/default/components/DailyTraffic";
 import PieCard from "views/admin/default/components/PieCard";
 import Card from "components/card/Card.js";
-import TableTopCreators from "views/admin/marketplace/components/TableTopCreators";
-import tableDataTopCreators from "views/admin/marketplace/variables/tableDataTopCreators.json";
-import { tableColumnsTopCreators } from "views/admin/marketplace/variables/tableColumnsTopCreators";
-import Tasks from "views/admin/default/components/Tasks";
-import TotalSpent from "views/admin/default/components/TotalSpent";
-import WeeklyRevenue from "views/admin/default/components/WeeklyRevenue";
-import {
-  columnsDataCheck,
-  columnsDataComplex,
-} from "views/admin/default/variables/columnsData";
-import tableDataCheck from "views/admin/default/variables/tableDataCheck.json";
-import tableDataComplex from "views/admin/default/variables/tableDataComplex.json";
+import TopDiligentTable from "views/admin/marketplace/components/TopDiligentTable";
+import TopQuizTable from "views/admin/marketplace/components/TopQuizTable";
+import tableDataTopDiligent from "views/admin/marketplace/variables/tableDataTopDiligent.json";
+import tableDataTopQuiz from "views/admin/marketplace/variables/tableDataTopQuiz.json";
 
 export default function UserReports() {
   // Chakra Color Mode
@@ -68,115 +60,64 @@ export default function UserReports() {
   const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      <SimpleGrid
-        columns={{ base: 1, md: 2, lg: 3, "2xl": 6 }}
-        gap='20px'
-        mb='20px'>
+      <SimpleGrid columns={{ base: 1, md: 3, lg: 3, "2xl": 3 }} gap='20px' mb='20px'>
         <MiniStatistics
           startContent={
             <IconBox
-              w='56px'
-              h='56px'
+              w='64px'
+              h='64px'
               bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdBarChart} color={brandColor} />
-              }
+              icon={<Icon w='36px' h='36px' as={MdPerson} color={brandColor} />}
             />
           }
-          name='Earnings'
-          value='$350.4'
+          name='Total Users'
+          value={'1,234'}
+          growth={'+4.2%'}
+          reverse
         />
         <MiniStatistics
           startContent={
             <IconBox
-              w='56px'
-              h='56px'
+              w='64px'
+              h='64px'
               bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdAttachMoney} color={brandColor} />
-              }
+              icon={<Icon w='36px' h='36px' as={MdAttachMoney} color={brandColor} />}
             />
           }
-          name='Spend this month'
-          value='$642.39'
-        />
-        <MiniStatistics growth='+23%' name='Sales' value='$574.34' />
-        <MiniStatistics
-          endContent={
-            <Flex me='-16px' mt='10px'>
-              <FormLabel htmlFor='balance'>
-                <Avatar src={Usa} />
-              </FormLabel>
-              <Select
-                id='balance'
-                variant='mini'
-                mt='5px'
-                me='0px'
-                defaultValue='usd'>
-                <option value='usd'>USD</option>
-                <option value='eur'>EUR</option>
-                <option value='gba'>GBA</option>
-              </Select>
-            </Flex>
-          }
-          name='Your balance'
-          value='$1,000'
+          name='Average usage time (h/day)'
+          value='6.42'
+          reverse
         />
         <MiniStatistics
           startContent={
             <IconBox
-              w='56px'
-              h='56px'
-              bg='linear-gradient(90deg, #4481EB 0%, #04BEFE 100%)'
-              icon={<Icon w='28px' h='28px' as={MdAddTask} color='white' />}
-            />
-          }
-          name='New Tasks'
-          value='154'
-        />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='56px'
-              h='56px'
+              w='64px'
+              h='64px'
               bg={boxBg}
-              icon={
-                <Icon w='32px' h='32px' as={MdFileCopy} color={brandColor} />
-              }
+              icon={<Icon w='36px' h='36px' as={MdFileCopy} color={brandColor} />}
             />
           }
-          name='Total Projects'
-          value='2935'
+          name='Version app'
+          value='1.0.3'
+          reverse
         />
       </SimpleGrid>
 
-      <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px' mb='20px'>
-        <TotalSpent />
-        <WeeklyRevenue />
-      </SimpleGrid>
-      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-        <CheckTable columnsData={columnsDataCheck} tableData={tableDataCheck} />
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-          <DailyTraffic />
-          <SimpleGrid columns={{ base: 1 }} gap='20px'>
-            <PieCard />
-            <Card px='0px' mb='20px'>
-              <TableTopCreators
-                tableData={tableDataTopCreators}
-                columnsData={tableColumnsTopCreators}
-              />
-            </Card>
-          </SimpleGrid>
-        </SimpleGrid>
-      </SimpleGrid>
-      <SimpleGrid columns={{ base: 1, md: 1, xl: 2 }} gap='20px' mb='20px'>
-        <ComplexTable
-          columnsData={columnsDataComplex}
-          tableData={tableDataComplex}
-        />
-        <SimpleGrid columns={{ base: 1, md: 2, xl: 2 }} gap='20px'>
-          <Tasks />
-          <MiniCalendar h='100%' minW='100%' selectRange={false} />
+      {/* Dashboard main sections */}
+      <SimpleGrid columns={{ base: 1, md: 3 }} gap='20px' mb='20px'>
+        <Card px='0px' mb='20px'>
+          <TopDiligentTable tableData={tableDataTopDiligent} />
+        </Card>
+
+        <Card px='0px' mb='20px'>
+          <TopQuizTable tableData={tableDataTopQuiz} />
+        </Card>
+
+        <SimpleGrid columns={{ base: 1 }} gap='20px'>
+          <PieCard />
+          <Card px='0px' mb='20px'>
+            <DailyTraffic />
+          </Card>
         </SimpleGrid>
       </SimpleGrid>
     </Box>
