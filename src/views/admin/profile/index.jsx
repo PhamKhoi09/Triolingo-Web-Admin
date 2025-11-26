@@ -36,7 +36,7 @@ import Opinions from "views/admin/profile/components/Opinions";
 // Assets
 import banner from "assets/img/auth/banner.png";
 import avatar from "assets/img/avatars/avatar4.png";
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from 'react-router-dom';
 
 export default function Overview() {
@@ -47,7 +47,8 @@ export default function Overview() {
   const avatarImg = user && user.avatar ? user.avatar : avatar;
   const name = user && user.name ? user.name : 'Adela Parkson';
   const job = user && user.job ? user.job : 'Product Designer';
-  const role = user && user.role ? user.role : 'Learner';
+  const initialRole = user && user.role ? user.role : 'Learner';
+  const [role, setRole] = useState(initialRole);
   const status = user && user.status ? user.status : 'Online';
 
   return (
@@ -63,6 +64,7 @@ export default function Overview() {
             name={name}
             job={job}
             role={role}
+            onRoleChange={(r) => setRole(r)}
             status={status}
           />
 

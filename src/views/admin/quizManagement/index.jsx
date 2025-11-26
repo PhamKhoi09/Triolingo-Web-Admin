@@ -4,7 +4,7 @@
   - Header matches other tables (title + menu area)
   - Uses placeholder data and icons; update resources later as needed
 */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -20,16 +20,39 @@ import {
   Progress,
   Icon,
   useColorModeValue,
+  Image,
+  Button,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  ModalCloseButton,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
 } from "@chakra-ui/react";
-import { Image } from "@chakra-ui/react";
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import ArrowIcon from "assets/img/icons/arrow_down.png";
+import { fetchQuizzes as apiFetchQuizzes, createQuiz as apiCreateQuiz } from "../../../api/quizzes";
+import { useToast } from "@chakra-ui/react";
 
 import Card from "components/card/Card";
-import Menu from "components/menu/MainMenu";
+// import Menu from "components/menu/MainMenu";
 import { MdEdit, MdDelete, MdClose } from "react-icons/md";
 import MCQIcon from "assets/img/icons/Multiple choice.png";
 import FillIcon from "assets/img/icons/Fill in the blank.png";
 import MatchIcon from "assets/img/icons/Matching headings.png";
+import ListenIcon from "assets/img/icons/Listen.png";
 
 const sampleData = [
   { id: 1, name: "1", questions: 5, topics: ["Animals"], types: ["mcq"], avg: 75.5, users: 1500 },
@@ -52,6 +75,106 @@ export default function QuizManagement() {
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
   const navigate = useNavigate();
+  // quizzes state (will be loaded from API)
+  const [quizzes, setQuizzes] = useState([]);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  // Delete quiz dialog state
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const [quizToDelete, setQuizToDelete] = useState(null);
+  const cancelDeleteRef = React.useRef();
+  const [createdQuizName, setCreatedQuizName] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const toast = useToast();
+
+  // create a new empty quiz (next id)
+  // Fetch quizzes from API on mount; fall back to sampleData on error
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const data = await apiFetchQuizzes();
+        if (mounted && Array.isArray(data)) {
+          setQuizzes(data);
+        } else if (mounted) {
+          // Non-array response -> fallback
+          setQuizzes(sampleData);
+        }
+      } catch (err) {
+        // Fallback to sample data and show non-fatal toast
+        if (mounted) {
+          setQuizzes(sampleData);
+          toast({ title: "Could not load quizzes from API.", description: "Using local sample data.", status: "warning", duration: 5000, isClosable: true });
+        }
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  // Create a new quiz with optimistic UI and API call
+  async function createNewQuiz() {
+    const nextId = Math.max(0, ...quizzes.map((q) => Number(q.id) || 0)) + 1;
+    const payload = {
+      name: String(nextId),
+      questions: 0,
+      topics: [],
+      types: [],
+      avg: 0,
+      users: 0,
+    };
+
+    // optimistic item (temporary id)
+    const tempId = `temp-${Date.now()}`;
+    const optimistic = { ...payload, id: tempId };
+    setQuizzes((prev) => [optimistic, ...prev]);
+
+    try {
+      const created = await apiCreateQuiz(payload);
+      // Replace optimistic item with created item (if API returned object)
+      setQuizzes((prev) => prev.map((q) => (q.id === tempId ? (created || payload) : q)));
+      const nameToShow = (created && created.name) || payload.name;
+      setCreatedQuizName(nameToShow);
+      onOpen();
+    } catch (err) {
+      // If backend returns HTML (e.g. dev server 404) we'll get a JSON parse error
+      // that contains '<' in the message. In that case assume backend isn't
+      // implemented yet and keep a local-created quiz (simulate success).
+      const msg = (err && err.message) || "Could not create quiz.";
+      if (msg.includes("Unexpected token <") || msg.includes("<")) {
+        // Replace optimistic item with a local-created item using numeric id
+        const simulated = { ...payload, id: String(nextId) };
+        setQuizzes((prev) => prev.map((q) => (q.id === tempId ? simulated : q)));
+        setCreatedQuizName(simulated.name);
+        toast({ title: "Backend not available", description: "Created quiz locally (development mode).", status: "info", duration: 5000, isClosable: true });
+        onOpen();
+      } else {
+        // Rollback optimistic update
+        setQuizzes((prev) => prev.filter((q) => q.id !== tempId));
+        toast({ title: "Create failed", description: msg, status: "error", duration: 6000, isClosable: true });
+      }
+    }
+  }
+
+  function handleDeleteQuiz(q) {
+    setQuizToDelete(q);
+    onDeleteOpen();
+  }
+
+  function handleConfirmDeleteQuiz() {
+    if (!quizToDelete) return;
+    try {
+      const id = quizToDelete.id;
+      setQuizzes((prev) => prev.filter((qq) => qq.id !== id));
+      setQuizToDelete(null);
+      onDeleteClose();
+      toast({ title: 'Quiz deleted', status: 'success', duration: 2500, isClosable: true });
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Could not delete quiz', status: 'error', duration: 3000, isClosable: true });
+    }
+  }
 
   function toggleRow(id) {
     setExpandedRows((p) => ({ ...p, [id]: !p[id] }));
@@ -90,27 +213,28 @@ export default function QuizManagement() {
   }
 
   const sortedData = React.useMemo(() => {
-    if (!sortBy) return sampleData;
-    const copy = [...sampleData];
+    if (!sortBy) return quizzes;
+    const copy = [...quizzes];
     copy.sort((a, b) => {
       const res = compareRows(a, b, sortBy);
       return sortDir === "asc" ? res : -res;
     });
     return copy;
-  }, [sortBy, sortDir]);
+  }, [sortBy, sortDir, quizzes]);
 
   return (
+    <>
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
       <Card flexDirection="column" w="100%" px="0px" overflowX={{ sm: "scroll", lg: "hidden" }}>
         <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
           <Text color={textColor} fontSize="22px" mb="4px" fontWeight="700" lineHeight="100%">
             All Quizzes
           </Text>
-          <Menu />
+          <Button leftIcon={<Icon as={MdEdit} />} size='sm' onClick={createNewQuiz} variant='solid' colorScheme='purple'>New Quiz</Button>
         </Flex>
 
         <Box>
-          <Table variant="simple" color="gray.500" mb="24px" mt="12px">
+              <Table variant="simple" color="gray.500" mb="24px" mt="12px">
             <Thead>
               <Tr>
                 <Th borderColor={borderColor} onClick={() => handleSort("name")} cursor="pointer">
@@ -164,17 +288,30 @@ export default function QuizManagement() {
                         <>
                           {!expandedRows[row.id] ? (
                             <>
-                              <Badge
-                                colorScheme="purple"
-                                px="3"
-                                py="1"
-                                borderRadius="full"
-                                fontSize="12px"
-                                cursor="pointer"
-                                onClick={() => toggleRow(row.id)}
-                              >
-                                {row.topics[0]}
-                              </Badge>
+                              <Menu>
+                                <MenuButton as={Badge}
+                                  colorScheme="purple"
+                                  px="3"
+                                  py="1"
+                                  borderRadius="full"
+                                  fontSize="12px"
+                                  cursor="pointer"
+                                  ms="0"
+                                  display="inline-flex"
+                                  alignItems="center"
+                                >
+                                  <Text as='span' mr='2'>{row.topics[0]}</Text>
+                                  <ChevronDownIcon w={4} h={4} />
+                                </MenuButton>
+                                <MenuList>
+                                  {row.topics.map((t, i) => (
+                                    <MenuItem key={t + i} onClick={() => { /* no-op for now */ }}>
+                                      {t}
+                                    </MenuItem>
+                                  ))}
+                                </MenuList>
+                              </Menu>
+
                               {row.topics.length > 1 && (
                                 <Badge
                                   colorScheme="gray"
@@ -191,15 +328,25 @@ export default function QuizManagement() {
                           ) : (
                             <Box>
                               <Flex align="center">
-                                <Badge
-                                  colorScheme="purple"
-                                  px="3"
-                                  py="1"
-                                  borderRadius="full"
-                                  fontSize="12px"
-                                >
-                                  {row.topics[0]}
-                                </Badge>
+                                <Menu>
+                                  <MenuButton as={Badge}
+                                    colorScheme="purple"
+                                    px="3"
+                                    py="1"
+                                    borderRadius="full"
+                                    fontSize="12px"
+                                    display="inline-flex"
+                                    alignItems="center"
+                                  >
+                                    <Text as='span' mr='2'>{row.topics[0]}</Text>
+                                    <ChevronDownIcon w={4} h={4} />
+                                  </MenuButton>
+                                  <MenuList>
+                                    {row.topics.map((t, i) => (
+                                      <MenuItem key={t + i}>{t}</MenuItem>
+                                    ))}
+                                  </MenuList>
+                                </Menu>
                                 <Box cursor="pointer" ms="6px" onClick={() => toggleRow(row.id)}>
                                   <Icon as={MdClose} w={4} h={4} color="gray.500" />
                                 </Box>
@@ -235,6 +382,7 @@ export default function QuizManagement() {
                           { key: "mcq", src: MCQIcon, alt: "Multiple choice" },
                           { key: "match", src: MatchIcon, alt: "Matching" },
                           { key: "write", src: FillIcon, alt: "Fill in the blank" },
+                          { key: "listening", src: ListenIcon, alt: "Listening" },
                         ];
 
                         return icons.map((it) => (
@@ -266,7 +414,7 @@ export default function QuizManagement() {
                         <Box cursor="pointer" onClick={() => navigate('/admin/quiz-management/edit', { state: { quiz: row } })}>
                           <Icon as={MdEdit} color="blue.400" w={6} h={6} />
                         </Box>
-                        <Box cursor="pointer"><Icon as={MdDelete} color="red.400" w={6} h={6} /></Box>
+                        <Box cursor="pointer" onClick={() => handleDeleteQuiz(row)}><Icon as={MdDelete} color="red.400" w={6} h={6} /></Box>
                       </Flex>
                   </Td>
                 </Tr>
@@ -276,5 +424,39 @@ export default function QuizManagement() {
         </Box>
       </Card>
     </Box>
+
+        {/* Success modal shown after creating a new quiz */}
+        <Modal isOpen={isOpen} onClose={() => { setCreatedQuizName(null); onClose(); }} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Quiz created</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Text>Successfully created quiz <Text as="span" fontWeight="700">{createdQuizName}</Text>.</Text>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button colorScheme="purple" mr={3} onClick={() => { setCreatedQuizName(null); onClose(); }}>
+                Close
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+        {/* Delete quiz confirmation dialog */}
+        <AlertDialog isOpen={isDeleteOpen} leastDestructiveRef={cancelDeleteRef} onClose={() => { setQuizToDelete(null); onDeleteClose(); }}>
+          <AlertDialogOverlay alignItems="center" justifyContent="center">
+            <AlertDialogContent w={{ base: '92%', md: '720px' }} mx="auto">
+              <AlertDialogHeader fontSize="xl" fontWeight="bold">Delete quiz</AlertDialogHeader>
+              <AlertDialogBody>
+                {quizToDelete ? `Are you sure you want to delete quiz ${quizToDelete.name || quizToDelete.id}? This action cannot be undone.` : 'Are you sure you want to delete this quiz?'}
+              </AlertDialogBody>
+              <AlertDialogFooter>
+                <Button ref={cancelDeleteRef} onClick={() => { setQuizToDelete(null); onDeleteClose(); }} variant="ghost" size="md">Cancel</Button>
+                <Button colorScheme="red" onClick={handleConfirmDeleteQuiz} ml={3} size="md">Delete</Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialogOverlay>
+        </AlertDialog>
+        </>
   );
 }

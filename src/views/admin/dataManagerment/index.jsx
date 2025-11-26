@@ -50,6 +50,7 @@ const initialPairs = [
 
 export default function DataManagerment() {
   const [pairs, setPairs] = useState(initialPairs);
+  const [selectedTag, setSelectedTag] = useState(tags[0]);
   const updateModal = useDisclosure();
   const newModal = useDisclosure();
   const [selectedIndex, setSelectedIndex] = useState(null);
@@ -90,7 +91,13 @@ export default function DataManagerment() {
           <Stack spacing={6}>
             <HStack spacing={4} wrap='wrap'>
               {tags.map((t, i) => (
-                <Button key={i} size='sm' variant='ghost' colorScheme='purple'>
+                <Button
+                  key={i}
+                  size='sm'
+                  variant={selectedTag === t ? 'solid' : 'ghost'}
+                  colorScheme='purple'
+                  onClick={() => setSelectedTag(t)}
+                >
                   {t}
                 </Button>
               ))}
@@ -100,7 +107,7 @@ export default function DataManagerment() {
               <Card mx='auto' maxW='760px' p='24px' borderRadius='16px'>
                 <HStack justify='space-between' mb='16px'>
                   <Text fontSize='2xl' fontWeight='700' color={textColor}>
-                    Antonyms (6 x 2)
+                    {selectedTag} {selectedTag === 'Antonyms' ? `(${pairs.length} x 2)` : ''}
                   </Text>
                   <Button leftIcon={<MdAdd />} size='sm' variant='outline' onClick={openNew}>
                     New
@@ -108,47 +115,53 @@ export default function DataManagerment() {
                 </HStack>
 
                 <Box borderTopWidth='1px' borderTopColor='gray.100' pt='18px'>
-                  <SimpleGrid columns={3} spacing={0} align='center'>
-                    <Box px='12px'>
-                      <Text fontSize='sm' color='gray.400' mb='8px'>
-                        word1_id
-                      </Text>
-                      <Stack spacing={6}>
-                        {pairs.map((p, idx) => (
-                          <Text key={idx} fontWeight='600' color={textColor}>
-                            {p[0]}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Box>
+                  {selectedTag === 'Antonyms' ? (
+                    <SimpleGrid columns={3} spacing={0} align='center'>
+                      <Box px='12px'>
+                        <Text fontSize='sm' color='gray.400' mb='8px'>
+                          word1_id
+                        </Text>
+                        <Stack spacing={6}>
+                          {pairs.map((p, idx) => (
+                            <Text key={idx} fontWeight='600' color={textColor}>
+                              {p[0]}
+                            </Text>
+                          ))}
+                        </Stack>
+                      </Box>
 
-                    <Box px='12px' borderLeftWidth='1px' borderRightWidth='1px' borderColor='gray.100'>
-                      <Text fontSize='sm' color='gray.400' mb='8px'>
-                        word2_id
-                      </Text>
-                      <Stack spacing={6}>
-                        {pairs.map((p, idx) => (
-                          <Text key={idx} fontWeight='600' color={textColor}>
-                            {p[1]}
-                          </Text>
-                        ))}
-                      </Stack>
-                    </Box>
+                      <Box px='12px' borderLeftWidth='1px' borderRightWidth='1px' borderColor='gray.100'>
+                        <Text fontSize='sm' color='gray.400' mb='8px'>
+                          word2_id
+                        </Text>
+                        <Stack spacing={6}>
+                          {pairs.map((p, idx) => (
+                            <Text key={idx} fontWeight='600' color={textColor}>
+                              {p[1]}
+                            </Text>
+                          ))}
+                        </Stack>
+                      </Box>
 
-                    <Box px='12px'>
-                      <Text fontSize='sm' color='gray.400' mb='8px'>
-                        
-                      </Text>
-                      <Stack spacing={4} align='center'>
-                        {pairs.map((_, idx) => (
-                          <HStack key={idx} spacing={2}>
-                            <IconButton aria-label='update' icon={<MdRefresh />} size='sm' onClick={() => openUpdate(idx)} />
-                            <IconButton aria-label='delete' icon={<MdDelete />} colorScheme='red' size='sm' onClick={() => handleDelete(idx)} />
-                          </HStack>
-                        ))}
-                      </Stack>
-                    </Box>
-                  </SimpleGrid>
+                      <Box px='12px'>
+                        <Text fontSize='sm' color='gray.400' mb='8px'>
+                          Actions
+                        </Text>
+                        <Stack spacing={4} align='center'>
+                          {pairs.map((_, idx) => (
+                            <HStack key={idx} spacing={2}>
+                              <IconButton aria-label='update' icon={<MdRefresh />} size='sm' onClick={() => openUpdate(idx)} />
+                              <IconButton aria-label='delete' icon={<MdDelete />} colorScheme='red' size='sm' onClick={() => handleDelete(idx)} />
+                            </HStack>
+                          ))}
+                        </Stack>
+                      </Box>
+                    </SimpleGrid>
+                  ) : (
+                    <Center py={10}>
+                      <Text color={textColor} fontWeight='600'>Content for {selectedTag} not implemented yet.</Text>
+                    </Center>
+                  )}
                 </Box>
               </Card>
             </Box>

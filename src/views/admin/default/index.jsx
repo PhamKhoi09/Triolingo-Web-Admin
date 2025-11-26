@@ -44,6 +44,9 @@ import {
   MdFileCopy,
   MdPerson,
 } from "react-icons/md";
+// Icons from assets
+import { ReactComponent as AppVersionIcon } from "assets/img/icons/app version.svg";
+import { ReactComponent as UsageTimeIcon } from "assets/img/icons/usage time.svg";
 // Other components
 import DailyTraffic from "views/admin/default/components/DailyTraffic";
 import PieCard from "views/admin/default/components/PieCard";
@@ -74,32 +77,32 @@ export default function UserReports() {
           growth={'+4.2%'}
           reverse
         />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='64px'
-              h='64px'
-              bg={boxBg}
-              icon={<Icon w='36px' h='36px' as={MdAttachMoney} color={brandColor} />}
-            />
-          }
-          name='Average usage time (h/day)'
-          value='6.42'
-          reverse
-        />
-        <MiniStatistics
-          startContent={
-            <IconBox
-              w='64px'
-              h='64px'
-              bg={boxBg}
-              icon={<Icon w='36px' h='36px' as={MdFileCopy} color={brandColor} />}
-            />
-          }
-          name='Version app'
-          value='1.0.3'
-          reverse
-        />
+          <MiniStatistics
+            startContent={
+              <IconBox
+                w='64px'
+                h='64px'
+                bg={boxBg}
+                icon={<UsageTimeIcon width='36' height='36' style={{ color: brandColor }} />}
+              />
+            }
+            name='Average usage time (h/day)'
+            value='6.42'
+            reverse
+          />
+          <MiniStatistics
+            startContent={
+              <IconBox
+                w='64px'
+                h='64px'
+                bg={boxBg}
+                icon={<AppVersionIcon width='36' height='36' style={{ color: brandColor }} />}
+              />
+            }
+            name='Version app'
+            value='1.0.3'
+            reverse
+          />
       </SimpleGrid>
 
       {/* Dashboard main sections */}
