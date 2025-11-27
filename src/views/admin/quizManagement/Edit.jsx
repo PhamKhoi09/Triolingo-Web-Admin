@@ -129,6 +129,45 @@ export default function EditQuiz() {
     const nextId = `new-${Date.now()}`;
     const q = { id: nextId, content: "", type: newQuestionType };
     setSelectedQuestion(q);
+    // Reset common buffers
+    setEditedContent("");
+    setEditedQuestionImage(null);
+    setOptionsLocal([]);
+    setPromptsLocal([]);
+    setResponsesLocal([]);
+    setFillAnswerLocal("");
+    setFillHiddenLocal([]);
+
+    if (newQuestionType === 'mcq') {
+      setOptionsLocal([
+        { id: 'opt-0', text: '', image: null, isCorrect: true },
+        { id: 'opt-1', text: '', image: null, isCorrect: false },
+        { id: 'opt-2', text: '', image: null, isCorrect: false },
+        { id: 'opt-3', text: '', image: null, isCorrect: false },
+      ]);
+    } else if (newQuestionType === 'fill') {
+      // nothing else required; fill uses fillAnswerLocal
+    } else if (newQuestionType === 'match') {
+      setPromptsLocal([
+        { id: 'p-0', text: '', image: null },
+        { id: 'p-1', text: '', image: null },
+        { id: 'p-2', text: '', image: null },
+        { id: 'p-3', text: '', image: null },
+      ]);
+      setResponsesLocal([
+        { id: 'r-0', text: '', image: null },
+        { id: 'r-1', text: '', image: null },
+        { id: 'r-2', text: '', image: null },
+        { id: 'r-3', text: '', image: null },
+      ]);
+    } else if (newQuestionType === 'listening') {
+      setOptionsLocal([
+        { id: 'opt-0', text: '', image: null, isCorrect: true },
+        { id: 'opt-1', text: '', image: null, isCorrect: false },
+        { id: 'opt-2', text: '', image: null, isCorrect: false },
+        { id: 'opt-3', text: '', image: null, isCorrect: false },
+      ]);
+    }
     onNewClose();
     onOpen();
   }
@@ -155,10 +194,74 @@ export default function EditQuiz() {
   // Local editing state for MCQ modal
   const [optionsLocal, setOptionsLocal] = React.useState([]);
   const [editedContent, setEditedContent] = React.useState("");
+  const [fillAnswerLocal, setFillAnswerLocal] = React.useState("");
+  const [fillHiddenLocal, setFillHiddenLocal] = React.useState([]);
   const fileInputRef = React.useRef(null);
   const [imagePickIndex, setImagePickIndex] = React.useState(null);
   const questionFileRef = React.useRef(null);
   const [editedQuestionImage, setEditedQuestionImage] = React.useState(null);
+  // Matching question local state
+  const [promptsLocal, setPromptsLocal] = React.useState([]);
+  const [responsesLocal, setResponsesLocal] = React.useState([]);
+  const matchFileRef = React.useRef(null);
+  const [matchFileMode, setMatchFileMode] = React.useState(null); // 'prompt' | 'response'
+  const [matchFileIndex, setMatchFileIndex] = React.useState(null);
+
+  // Matching headings handlers
+  function handleDeletePrompt(index) {
+    if (promptsLocal.length <= 1) {
+      toast({ title: 'At least one prompt required', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    setPromptsLocal((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleDeleteResponse(index) {
+    if (responsesLocal.length <= 1) {
+      toast({ title: 'At least one response required', status: 'warning', duration: 3000, isClosable: true });
+      return;
+    }
+    setResponsesLocal((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleMatchImageClick(mode, index) {
+    setMatchFileMode(mode);
+    setMatchFileIndex(index);
+    if (matchFileRef.current) matchFileRef.current.click();
+  }
+
+  function handleMatchFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (matchFileMode === 'prompt') {
+        setPromptsLocal((prev) => {
+          const copy = [...prev];
+          copy[matchFileIndex] = { ...copy[matchFileIndex], image: reader.result };
+          return copy;
+        });
+      } else if (matchFileMode === 'response') {
+        setResponsesLocal((prev) => {
+          const copy = [...prev];
+          copy[matchFileIndex] = { ...copy[matchFileIndex], image: reader.result };
+          return copy;
+        });
+      }
+      setMatchFileMode(null);
+      setMatchFileIndex(null);
+      e.target.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleRemoveMatchImage(mode, index) {
+    if (mode === 'prompt') {
+      setPromptsLocal((prev) => prev.map((p, i) => (i === index ? { ...p, image: null } : p)));
+    } else if (mode === 'response') {
+      setResponsesLocal((prev) => prev.map((r, i) => (i === index ? { ...r, image: null } : r)));
+    }
+  }
 
   function handleEditQuestion(q) {
     setSelectedQuestion(q);
@@ -179,6 +282,62 @@ export default function EditQuiz() {
       setOptionsLocal(opts);
     } else {
       setOptionsLocal([]);
+    }
+    if (q.type === 'listening') {
+      const opts = Array.isArray(q.options) && q.options.length > 0
+        ? q.options.map((o, i) => ({ id: o.id || `opt-${i}`, text: '', image: o.image || o.src || null, isCorrect: !!o.isCorrect }))
+        : [
+            { id: 'opt-0', text: '', image: null, isCorrect: true },
+            { id: 'opt-1', text: '', image: null, isCorrect: false },
+            { id: 'opt-2', text: '', image: null, isCorrect: false },
+            { id: 'opt-3', text: '', image: null, isCorrect: false },
+          ];
+      // ensure at least one correct
+      if (!opts.some((o) => o.isCorrect)) opts[0].isCorrect = true;
+      setOptionsLocal(opts);
+    }
+    if (q.type === 'match') {
+      const p = Array.isArray(q.prompts) && q.prompts.length > 0
+        ? q.prompts.map((t, i) => ({ id: t.id || `p-${i}`, text: t.text || '', image: t.image || null }))
+        : [
+            { id: 'p-0', text: '', image: null },
+            { id: 'p-1', text: '', image: null },
+            { id: 'p-2', text: '', image: null },
+            { id: 'p-3', text: '', image: null },
+          ];
+      const r = Array.isArray(q.responses) && q.responses.length > 0
+        ? q.responses.map((t, i) => ({ id: t.id || `r-${i}`, text: t.text || '', image: t.image || null }))
+        : [
+            { id: 'r-0', text: '', image: null },
+            { id: 'r-1', text: '', image: null },
+            { id: 'r-2', text: '', image: null },
+            { id: 'r-3', text: '', image: null },
+          ];
+      setPromptsLocal(p);
+      setResponsesLocal(r);
+    } else {
+      setPromptsLocal([]);
+      setResponsesLocal([]);
+    }
+    if (q.type === 'fill') {
+      const ans = q.answer || "";
+      setFillAnswerLocal(ans);
+      // Support different possible shapes for hidden data on the question object
+      if (Array.isArray(q.hiddenPositions)) {
+        // boolean array
+        const h = q.hiddenPositions.slice(0, ans.length);
+        setFillHiddenLocal(h.concat(Array.from({ length: Math.max(0, ans.length - h.length) }, () => false)));
+      } else if (Array.isArray(q.hiddenIndices)) {
+        // indices array -> convert to booleans
+        setFillHiddenLocal(Array.from({ length: ans.length }, (_, i) => q.hiddenIndices.includes(i)));
+      } else if (Array.isArray(q.hidden)) {
+        setFillHiddenLocal(q.hidden.map(Boolean).slice(0, ans.length).concat(Array.from({ length: Math.max(0, ans.length - q.hidden.length) }, () => false)));
+      } else {
+        setFillHiddenLocal(Array.from({ length: ans.length }, () => false));
+      }
+    } else {
+      setFillAnswerLocal("");
+      setFillHiddenLocal([]);
     }
     onOpen();
   }
@@ -264,10 +423,27 @@ export default function EditQuiz() {
   function handleSaveQuestion() {
     if (!selectedQuestion) return;
     const updated = { ...selectedQuestion, content: editedContent, options: optionsLocal, image: editedQuestionImage };
-    setQuestionsState((prev) => prev.map((q) => (q.id === selectedQuestion.id ? updated : q)));
+    // include matching headings data when applicable
+    if (selectedQuestion.type === 'match') {
+      updated.prompts = promptsLocal.map((p, i) => ({ id: p.id || `p-${i}`, text: p.text || '', image: p.image || null }));
+      updated.responses = responsesLocal.map((r, i) => ({ id: r.id || `r-${i}`, text: r.text || '', image: r.image || null }));
+    }
+    // include fill answer and hidden positions when applicable
+    if (selectedQuestion.type === 'fill') {
+      updated.answer = fillAnswerLocal || "";
+      updated.hiddenPositions = Array.isArray(fillHiddenLocal) ? fillHiddenLocal : Array.from({ length: (fillAnswerLocal || "").length }, () => false);
+    }
+    setQuestionsState((prev) => {
+      const exists = prev.some((q) => q.id === selectedQuestion.id);
+      if (exists) return prev.map((q) => (q.id === selectedQuestion.id ? updated : q));
+      // append new questions to the end so numbering continues
+      return [...prev, updated];
+    });
     setSelectedQuestion(null);
     setOptionsLocal([]);
     setEditedContent("");
+    setFillAnswerLocal("");
+    setFillHiddenLocal([]);
     onClose();
     toast({ title: 'Question saved', status: 'success', duration: 2500, isClosable: true });
   }
@@ -284,6 +460,17 @@ export default function EditQuiz() {
     if (key.includes("animal") || key.includes("animals")) return animalsImg;
     return animalsImg;
   }
+
+  const getTypeLabel = (t) =>
+    t === "mcq"
+      ? "Multiple choice"
+      : t === "fill"
+      ? "Fill in the gap"
+      : t === "listening"
+      ? "Listening"
+      : "Matching headings";
+
+  const modalTypeLabel = selectedQuestion ? getTypeLabel(selectedQuestion.type) : getTypeLabel(newQuestionType);
 
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }} position="relative">
@@ -464,25 +651,47 @@ export default function EditQuiz() {
             <ModalOverlay />
             <ModalContent maxW="92vw" minH="80vh" borderRadius="16px">
               <ModalHeader px={6} pt={6}>
-                <Text fontWeight={700} color="purple.700">{selectedQuestion ? `Question ${selectedQuestion.id} – Multiple choice` : "Question – Multiple choice"}</Text>
+                <Text fontWeight={700} color="purple.700">{selectedQuestion ? `Question ${selectedQuestion.id} – ${modalTypeLabel}` : `Question – ${modalTypeLabel}`}</Text>
               </ModalHeader>
               <ModalCloseButton />
               <ModalBody>
                 {selectedQuestion && selectedQuestion.type === "match" ? (
                   <VStack spacing={6} align="stretch">
                     <SimpleGrid columns={{ base: 1, md: 4 }} gap={6}>
-                      {["Prompt 1", "Prompt 2", "Prompt 3", "Prompt 4"].map((p, i) => {
+                      {promptsLocal.map((p, i) => {
                         const colors = ["blue.600", "teal.500", "yellow.400", "pink.500"];
+                        const color = colors[i % colors.length];
                         return (
-                          <Box key={p} bg={colors[i]} color="white" borderRadius="12px" p={6} position="relative" boxShadow="sm" minH={{ base: "160px", md: "200px" }}>
+                          <Box key={p.id || `prompt-${i}`} bg={color} color="white" borderRadius="12px" p={6} position="relative" boxShadow="sm" minH={{ base: "160px", md: "200px" }}>
                             <Flex justify="space-between" position="absolute" top="10px" left="10px" right="10px">
                               <Flex gap="8px">
-                                <IconButton aria-label="Delete prompt" icon={<MdDelete size={20} />} size="md" variant="ghost" color="white" />
-                                <IconButton aria-label="Add image to prompt" icon={<MdImage size={20} />} size="md" variant="ghost" color="white" />
+                                <IconButton aria-label="Delete prompt" icon={<MdDelete size={20} />} size="md" variant="ghost" color="white" onClick={() => handleDeletePrompt(i)} />
+                                <IconButton aria-label="Add image to prompt" icon={<MdImage size={20} />} size="md" variant="ghost" color="white" onClick={() => handleMatchImageClick('prompt', i)} />
+                                {p.image ? (
+                                  <IconButton aria-label="Remove prompt image" icon={<MdDelete size={18} />} size="md" variant="ghost" color="white" onClick={() => handleRemoveMatchImage('prompt', i)} />
+                                ) : null}
                               </Flex>
                             </Flex>
-                            <Center h="100%">
-                              <Text textAlign="center" fontSize={{ base: "16px", md: "18px" }}>{"Type prompt here"}</Text>
+                            <Center h="100%" flexDirection="column">
+                              <Textarea
+                                value={p.text}
+                                onChange={(e) => setPromptsLocal((prev) => {
+                                  const copy = [...prev];
+                                  copy[i] = { ...copy[i], text: e.target.value };
+                                  return copy;
+                                })}
+                                placeholder="Type prompt here"
+                                resize="none"
+                                minH="100px"
+                                bg="transparent"
+                                border="none"
+                                color="white"
+                                textAlign="center"
+                                fontSize={{ base: '16px', md: '18px' }}
+                              />
+                              {p.image ? (
+                                <Image src={p.image} mt={2} borderRadius="8px" maxH="120px" objectFit="cover" />
+                              ) : null}
                             </Center>
                           </Box>
                         );
@@ -490,23 +699,46 @@ export default function EditQuiz() {
                     </SimpleGrid>
 
                     <SimpleGrid columns={{ base: 1, md: 4 }} gap={6}>
-                      {["Response 1", "Response 2", "Response 3", "Response 4"].map((r, i) => {
+                      {responsesLocal.map((r, i) => {
                         const colors = ["blue.300", "teal.200", "yellow.200", "pink.200"];
+                        const color = colors[i % colors.length];
                         return (
-                          <Box key={r} bg={colors[i]} color="white" borderRadius="12px" p={6} position="relative" boxShadow="sm" minH={{ base: "160px", md: "200px" }}>
+                          <Box key={r.id || `response-${i}`} bg={color} color="white" borderRadius="12px" p={6} position="relative" boxShadow="sm" minH={{ base: "160px", md: "200px" }}>
                             <Flex justify="space-between" position="absolute" top="10px" left="10px" right="10px">
                               <Flex gap="8px">
-                                <IconButton aria-label="Delete response" icon={<MdDelete size={20} />} size="md" variant="ghost" color="white" />
-                                <IconButton aria-label="Add image to response" icon={<MdImage size={20} />} size="md" variant="ghost" color="white" />
+                                <IconButton aria-label="Delete response" icon={<MdDelete size={20} />} size="md" variant="ghost" color="white" onClick={() => handleDeleteResponse(i)} />
+                                <IconButton aria-label="Add image to response" icon={<MdImage size={20} />} size="md" variant="ghost" color="white" onClick={() => handleMatchImageClick('response', i)} />
+                                {r.image ? (
+                                  <IconButton aria-label="Remove response image" icon={<MdDelete size={18} />} size="md" variant="ghost" color="white" onClick={() => handleRemoveMatchImage('response', i)} />
+                                ) : null}
                               </Flex>
                             </Flex>
-                            <Center h="100%">
-                              <Text textAlign="center" fontSize={{ base: "16px", md: "18px" }}>{"Type response here"}</Text>
+                            <Center h="100%" flexDirection="column">
+                              <Textarea
+                                value={r.text}
+                                onChange={(e) => setResponsesLocal((prev) => {
+                                  const copy = [...prev];
+                                  copy[i] = { ...copy[i], text: e.target.value };
+                                  return copy;
+                                })}
+                                placeholder="Type response here"
+                                resize="none"
+                                minH="100px"
+                                bg="transparent"
+                                border="none"
+                                color="white"
+                                textAlign="center"
+                                fontSize={{ base: '16px', md: '18px' }}
+                              />
+                              {r.image ? (
+                                <Image src={r.image} mt={2} borderRadius="8px" maxH="120px" objectFit="cover" />
+                              ) : null}
                             </Center>
                           </Box>
                         );
                       })}
                     </SimpleGrid>
+                    <input type="file" accept="image/*" ref={matchFileRef} style={{ display: 'none' }} onChange={handleMatchFileChange} />
                   </VStack>
                 ) : (
                   <VStack spacing={6} align="stretch">
@@ -526,22 +758,90 @@ export default function EditQuiz() {
                       </Flex>
 
                       <Center h="100%">
-                        <Textarea
-                          value={editedContent}
-                          onChange={(e) => setEditedContent(e.target.value)}
-                          placeholder="Type your question here..."
-                          resize="none"
-                          minH="100px"
-                          bg="transparent"
-                          border="none"
-                          color="purple.700"
-                          textAlign="center"
-                          fontSize={{ base: '20px', md: '28px' }}
-                        />
+                        {selectedQuestion && selectedQuestion.type === 'listening' ? (
+                          <Box textAlign="center">
+                            <Text fontSize={{ base: '14px', md: '16px' }} color="purple.700" fontWeight={600} mb={2}>Keyword</Text>
+                            <Textarea
+                              value={editedContent}
+                              onChange={(e) => setEditedContent(e.target.value)}
+                              placeholder="Enter the keyword to test (e.g. 'apple')"
+                              resize="none"
+                              minH="100px"
+                              bg="transparent"
+                              border="none"
+                              color="purple.700"
+                              textAlign="center"
+                              fontSize={{ base: '20px', md: '28px' }}
+                            />
+                          </Box>
+                        ) : (
+                          <Textarea
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            placeholder="Type your question here..."
+                            resize="none"
+                            minH="100px"
+                            bg="transparent"
+                            border="none"
+                            color="purple.700"
+                            textAlign="center"
+                            fontSize={{ base: '20px', md: '28px' }}
+                          />
+                        )}
                       </Center>
 
                       {editedQuestionImage ? (
                         <Image src={editedQuestionImage} mt={2} borderRadius="8px" maxH="140px" objectFit="cover" />
+                      ) : null}
+                      {selectedQuestion && selectedQuestion.type === 'fill' ? (
+                        <Box bg="white" p={4} borderRadius="12px" mt={4}>
+                          <Text fontWeight={600} mb={2} color="purple.700">Correct answer</Text>
+                          <Input
+                            value={fillAnswerLocal}
+                            onChange={(e) => {
+                              const val = e.target.value || "";
+                              setFillAnswerLocal(val);
+                              setFillHiddenLocal((prev) => {
+                                const prevLen = prev.length;
+                                const newLen = val.length;
+                                if (newLen === prevLen) return prev;
+                                if (newLen > prevLen) return [...prev, ...Array.from({ length: newLen - prevLen }, () => false)];
+                                return prev.slice(0, newLen);
+                              });
+                            }}
+                            placeholder="Enter the correct answer"
+                            mb={3}
+                          />
+                          <Text fontSize="sm" color="gray.600" mb={2}>Student's view</Text>
+                          <Flex gap={2} flexWrap="wrap">
+                            {(fillAnswerLocal || "").split("").map((ch, i) => {
+                              const hidden = !!fillHiddenLocal[i];
+                              return (
+                                <Box
+                                  as="button"
+                                  key={i}
+                                  onClick={() => setFillHiddenLocal((prev) => {
+                                    const copy = [...prev];
+                                    const len = Math.max(copy.length, (fillAnswerLocal || "").length);
+                                    if (copy.length < len) copy.push(...Array.from({ length: len - copy.length }, () => false));
+                                    copy[i] = !copy[i];
+                                    return copy;
+                                  })}
+                                  bg={hidden ? "gray.200" : "purple.50"}
+                                  borderRadius="6px"
+                                  px={3}
+                                  py={2}
+                                  minW="28px"
+                                  textAlign="center"
+                                  fontWeight={700}
+                                  _focus={{ outline: "none" }}
+                                >
+                                  {hidden ? '_' : (ch === ' ' ? '\u00A0' : ch)}
+                                </Box>
+                              );
+                            })}
+                          </Flex>
+                        </Box>
                       ) : null}
                       <input type="file" accept="image/*" ref={questionFileRef} style={{ display: 'none' }} onChange={handleQuestionFileChange} />
                     </Box>
@@ -585,25 +885,60 @@ export default function EditQuiz() {
                               </Flex>
 
                               <Center h="100%">
-                                <Textarea
-                                  value={opt.text}
-                                  onChange={(e) => setOptionsLocal((prev) => {
-                                    const copy = [...prev];
-                                    copy[i] = { ...copy[i], text: e.target.value };
-                                    return copy;
-                                  })}
-                                  placeholder="Type answer option here"
-                                  resize="none"
-                                  minH="100px"
-                                  bg="transparent"
-                                  border="none"
-                                  color="white"
-                                  textAlign="center"
-                                  fontSize={{ base: '16px', md: '18px' }}
-                                />
+                                {selectedQuestion && selectedQuestion.type === 'listening' ? (
+                                  <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" color="white">
+                                    {opt.image ? (
+                                      <Image src={opt.image} maxH="120px" borderRadius="8px" objectFit="cover" />
+                                    ) : (
+                                      <Flex direction="column" align="center" gap={2}>
+                                        <Icon as={MdImage} boxSize={8} />
+                                        <Text>Upload image</Text>
+                                      </Flex>
+                                    )}
+                                  </Box>
+                                ) : selectedQuestion && selectedQuestion.type === 'mcq' ? (
+                                  // MCQ: prefer image in center if provided, otherwise show text area
+                                  opt.image ? (
+                                    <Image src={opt.image} maxH="120px" borderRadius="8px" objectFit="cover" />
+                                  ) : (
+                                    <Textarea
+                                      value={opt.text}
+                                      onChange={(e) => setOptionsLocal((prev) => {
+                                        const copy = [...prev];
+                                        copy[i] = { ...copy[i], text: e.target.value };
+                                        return copy;
+                                      })}
+                                      placeholder="Type answer option here"
+                                      resize="none"
+                                      minH="100px"
+                                      bg="transparent"
+                                      border="none"
+                                      color="white"
+                                      textAlign="center"
+                                      fontSize={{ base: '16px', md: '18px' }}
+                                    />
+                                  )
+                                ) : (
+                                  <Textarea
+                                    value={opt.text}
+                                    onChange={(e) => setOptionsLocal((prev) => {
+                                      const copy = [...prev];
+                                      copy[i] = { ...copy[i], text: e.target.value };
+                                      return copy;
+                                    })}
+                                    placeholder="Type answer option here"
+                                    resize="none"
+                                    minH="100px"
+                                    bg="transparent"
+                                    border="none"
+                                    color="white"
+                                    textAlign="center"
+                                    fontSize={{ base: '16px', md: '18px' }}
+                                  />
+                                )}
                               </Center>
 
-                              {opt.image ? (
+                              {opt.image && !(selectedQuestion && (selectedQuestion.type === 'listening' || selectedQuestion.type === 'mcq' || selectedQuestion.type === 'match')) ? (
                                 <Image src={opt.image} mt={2} borderRadius="8px" maxH="80px" objectFit="cover" />
                               ) : null}
                             </Box>

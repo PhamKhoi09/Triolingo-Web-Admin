@@ -47,7 +47,9 @@ export default function Overview() {
   const avatarImg = user && user.avatar ? user.avatar : avatar;
   const name = user && user.name ? user.name : 'Adela Parkson';
   const job = user && user.job ? user.job : 'Product Designer';
-  const initialRole = user && user.role ? user.role : 'Learner';
+  // Only allow 'Admin' or 'Learner' roles — default to 'Learner' for anything else
+  const rawRole = user && user.role ? user.role : null;
+  const initialRole = rawRole && String(rawRole).toLowerCase() === 'admin' ? 'Admin' : 'Learner';
   const [role, setRole] = useState(initialRole);
   const status = user && user.status ? user.status : 'Online';
 

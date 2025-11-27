@@ -119,7 +119,6 @@ function EditRoleButton({ currentRole, onRoleChange, textColorPrimary, textColor
               <VStack spacing={3} mt={2}>
                 <HStack spacing={3} justify='center'>
                   <Button variant={selected === 'Learner' ? 'solid' : 'outline'} colorScheme='purple' onClick={() => setSelected('Learner')}>Learner</Button>
-                  <Button variant={selected === 'Contributor' ? 'solid' : 'outline'} colorScheme='yellow' onClick={() => setSelected('Contributor')}>Contributor</Button>
                   <Button variant={selected === 'Admin' ? 'solid' : 'outline'} colorScheme='red' onClick={() => setSelected('Admin')}>Admin</Button>
                 </HStack>
               </VStack>
