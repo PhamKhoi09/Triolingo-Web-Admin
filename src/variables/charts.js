@@ -1,11 +1,15 @@
 // Daily Traffic Dashboards Default
 
-export const barChartDataDailyTraffic = [
-  {
-    name: "Daily Traffic",
-    data: [20, 30, 40, 20, 45, 50, 30],
-  },
-];
+// Returns the chart series for daily traffic. Pass a 7-item array of numbers
+// from the backend as `values` (defaults are sample values).
+export function barChartDataDailyTraffic(values = [20, 30, 40, 20, 45, 50, 30]) {
+  return [
+    {
+      name: "Daily Traffic",
+      data: values,
+    },
+  ];
+}
 
 export const barChartOptionsDailyTraffic = {
   chart: {
@@ -27,7 +31,8 @@ export const barChartOptionsDailyTraffic = {
     theme: "dark",
   },
   xaxis: {
-    categories: ["00", "04", "08", "12", "14", "16", "18"],
+    // Show the last 7 days of the week instead of hourly labels
+    categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     show: false,
     labels: {
       show: true,

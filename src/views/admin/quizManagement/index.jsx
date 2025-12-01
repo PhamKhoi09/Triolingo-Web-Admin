@@ -71,6 +71,7 @@ const sampleData = [
 export default function QuizManagement() {
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.100");
+  const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
   const [expandedRows, setExpandedRows] = useState({});
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
@@ -225,7 +226,14 @@ export default function QuizManagement() {
   return (
     <>
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      <Card flexDirection="column" w="100%" px="0px" overflowX={{ sm: "scroll", lg: "hidden" }}>
+      <Card
+        flexDirection="column"
+        w={{ base: "100%", md: "95%", lg: "90%" }}
+        maxW="1200px"
+        mx="auto"
+        px={{ base: "8px", md: "0px" }}
+        overflowX={{ sm: "scroll", lg: "hidden" }}
+      >
         <Flex px="25px" mb="8px" justifyContent="space-between" align="center">
           <Text color={textColor} fontSize="22px" mb="4px" fontWeight="700" lineHeight="100%">
             All Quizzes
@@ -233,56 +241,57 @@ export default function QuizManagement() {
           <Button leftIcon={<Icon as={MdEdit} />} size='sm' onClick={createNewQuiz} variant='solid' colorScheme='purple'>New Quiz</Button>
         </Flex>
 
-        <Box>
-              <Table variant="simple" color="gray.500" mb="24px" mt="12px">
+          <Box px={{ base: 2, md: 6 }}>
+            <Table variant="simple" color="gray.500" mb="24px" mt="12px" tableLayout="fixed" size="sm">
             <Thead>
               <Tr>
-                <Th borderColor={borderColor} onClick={() => handleSort("name")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">Quiz name</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "name" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} onClick={() => handleSort("name")} cursor="pointer" w={{ base: "56px", md: "72px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
+                  <Flex align="center" gap="6px" justifyContent="center">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600">Quiz name</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "name" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} onClick={() => handleSort("questions")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">Number of question</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "questions" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} onClick={() => handleSort("questions")} cursor="pointer" w={{ base: "70px", md: "90px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
+                  <Flex align="center" gap="6px" justifyContent="center">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600"># Questions</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "questions" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} onClick={() => handleSort("topics")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">Topic included</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "topics" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} onClick={() => handleSort("topics")} cursor="pointer" w={{ base: "140px", md: "220px" }} px={{ base: 2, md: 4 }} whiteSpace="nowrap" textAlign="center">
+                  <Flex align="center" justifyContent="center" gap="6px">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600">Topics</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "topics" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} onClick={() => handleSort("types")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">Question types</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "types" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} onClick={() => handleSort("types")} cursor="pointer" w={{ base: "80px", md: "80px" }} px={{ base: 2, md: 4 }} whiteSpace="nowrap">
+                  <Flex align="center" gap="6px">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600">Types</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "types" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} onClick={() => handleSort("avg")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">Average grade</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "avg" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} w={{ base: "8px", md: "90px" }} px={0} />
+                <Th borderColor={borderColor} onClick={() => handleSort("avg")} cursor="pointer" w={{ base: "100px", md: "100px" }} px={{ base: 2, md: 2 }} whiteSpace="nowrap">
+                  <Flex align="center" gap="6px">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600">Avg</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "avg" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} onClick={() => handleSort("users")} cursor="pointer">
-                  <Flex align="center" gap="8px">
-                    <Text color="gray.400" fontSize="12px">User joined</Text>
-                    <Image src={ArrowIcon} alt="sort" boxSize="25px" transform={sortBy === "users" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
+                <Th borderColor={borderColor} onClick={() => handleSort("users")} cursor="pointer" w={{ base: "90px", md: "90px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
+                  <Flex align="center" gap="6px">
+                    <Text color="gray.600" fontSize="11px" fontWeight="600">Users</Text>
+                    <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "users" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor}><Text color="gray.400" fontSize="12px">Actions</Text></Th>
+                <Th borderColor={borderColor} w={{ base: "90px", md: "110px" }} px={{ base: 2, md: 4 }}><Text color="gray.600" fontSize="11px" fontWeight="600">Actions</Text></Th>
               </Tr>
             </Thead>
             <Tbody>
               
               {sortedData.map((row) => (
-                <Tr key={row.id}>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">{row.name}</Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">{row.questions}</Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">
+                <Tr key={row.id} _hover={{ bg: rowHoverBg }} transition="background 0.12s ease">
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "56px", md: "72px" }} textAlign="center" px={{ base: 2, md: 4 }}>{row.name}</Td>
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "70px", md: "90px" }} textAlign="center" px={{ base: 2, md: 4 }}>{row.questions}</Td>
+                  <Td fontSize={{ sm: "14px" }} borderColor="transparent" w={{ base: "140px", md: "220px" }} px={{ base: 2, md: 4 }}>
                     <Flex align="center">
                       {row.topics && row.topics.length > 0 ? (
                         <>
@@ -291,17 +300,17 @@ export default function QuizManagement() {
                               <Menu>
                                 <MenuButton as={Badge}
                                   colorScheme="purple"
-                                  px="3"
-                                  py="1"
+                                  px="2"
+                                  py="0.5"
                                   borderRadius="full"
-                                  fontSize="12px"
+                                  fontSize="11px"
                                   cursor="pointer"
                                   ms="0"
                                   display="inline-flex"
                                   alignItems="center"
                                 >
-                                  <Text as='span' mr='2'>{row.topics[0]}</Text>
-                                  <ChevronDownIcon w={4} h={4} />
+                                  <Text as='span' mr='2' fontSize="12px">{row.topics[0]}</Text>
+                                  <ChevronDownIcon w={3} h={3} />
                                 </MenuButton>
                                 <MenuList>
                                   {row.topics.map((t, i) => (
@@ -316,9 +325,9 @@ export default function QuizManagement() {
                                 <Badge
                                   colorScheme="gray"
                                   px="2"
-                                  py="1"
+                                  py="0.5"
                                   borderRadius="full"
-                                  fontSize="12px"
+                                  fontSize="11px"
                                   ms="8px"
                                 >
                                   {row.topics.length}
@@ -331,15 +340,15 @@ export default function QuizManagement() {
                                 <Menu>
                                   <MenuButton as={Badge}
                                     colorScheme="purple"
-                                    px="3"
-                                    py="1"
+                                    px="2"
+                                    py="0.5"
                                     borderRadius="full"
-                                    fontSize="12px"
+                                    fontSize="11px"
                                     display="inline-flex"
                                     alignItems="center"
                                   >
-                                    <Text as='span' mr='2'>{row.topics[0]}</Text>
-                                    <ChevronDownIcon w={4} h={4} />
+                                    <Text as='span' mr='2' fontSize="12px">{row.topics[0]}</Text>
+                                    <ChevronDownIcon w={3} h={3} />
                                   </MenuButton>
                                   <MenuList>
                                     {row.topics.map((t, i) => (
@@ -353,13 +362,13 @@ export default function QuizManagement() {
                               </Flex>
                               <Box mt="8px">
                                 {row.topics.slice(1).map((t, i) => (
-                                  <Badge
+                                    <Badge
                                     key={t + i}
                                     colorScheme="purple"
-                                    px="3"
-                                    py="1"
+                                    px="2"
+                                    py="0.5"
                                     borderRadius="full"
-                                    fontSize="12px"
+                                    fontSize="11px"
                                     display="inline-block"
                                     mb="6px"
                                   >
@@ -375,46 +384,73 @@ export default function QuizManagement() {
                       )}
                     </Flex>
                   </Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">
-                    <Flex align="center">
-                      {(() => {
-                        const icons = [
-                          { key: "mcq", src: MCQIcon, alt: "Multiple choice" },
-                          { key: "match", src: MatchIcon, alt: "Matching" },
-                          { key: "write", src: FillIcon, alt: "Fill in the blank" },
-                          { key: "listening", src: ListenIcon, alt: "Listening" },
-                        ];
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "80px", md: "80px" }} px={{ base: 2, md: 4 }}>
+                      <Flex align="center">
+                        {(() => {
+                          const icons = [
+                            { key: "mcq", src: MCQIcon, alt: "Multiple choice" },
+                            { key: "match", src: MatchIcon, alt: "Matching" },
+                            { key: "write", src: FillIcon, alt: "Fill in the blank" },
+                            { key: "listening", src: ListenIcon, alt: "Listening" },
+                          ];
 
-                        return icons.map((it) => (
-                          <Image
-                            key={it.key}
-                            src={it.src}
-                            alt={it.alt}
-                            boxSize="20px"
-                            objectFit="contain"
-                            mr="10px"
-                            opacity={row.types.includes(it.key) ? 1 : 0.18}
-                            filter={row.types.includes(it.key) ? "none" : "grayscale(100%)"}
-                          />
-                        ));
-                      })()}
-                    </Flex>
+                          const hasType = (key) => {
+                            // Prefer explicit `row.types` when present
+                            if (Array.isArray(row.types) && row.types.length) {
+                              try {
+                                return row.types.map((t) => String(t).toLowerCase()).includes(key);
+                              } catch (e) {
+                                // ignore and continue to questions fallback
+                              }
+                            }
+
+                            // If `row.questions` is an array of objects, inspect their `type`/`kind` fields
+                            if (Array.isArray(row.questions) && row.questions.length && typeof row.questions[0] === 'object') {
+                              return row.questions.some((q) => {
+                                if (!q) return false;
+                                const t = (q.type || q.kind || q.questionType || "").toString().toLowerCase();
+                                return t === key || t.includes(key);
+                              });
+                            }
+
+                            return false;
+                          };
+
+                          return icons.map((it) => {
+                            const on = hasType(it.key);
+                            return (
+                              <Image
+                                key={it.key}
+                                src={it.src}
+                                alt={it.alt}
+                                boxSize="18px"
+                                objectFit="contain"
+                                mr="8px"
+                                opacity={on ? 1 : 0.18}
+                                filter={on ? "none" : "grayscale(100%)"}
+                              />
+                            );
+                          });
+                        })()}
+                      </Flex>
                   </Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">
+                  {/* spacer cell (invisible) */}
+                  <Td borderColor="transparent" w={{ base: "8px", md: "48px" }} px={0} />
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "100px", md: "100px" }} px={{ base: 2, md: 2 }}>
                     <Flex align="center">
-                      <Text me="12px" fontWeight="700">{row.avg}%</Text>
-                      <Box w="120px">
+                      <Text me="8px" fontWeight="700">{row.avg}%</Text>
+                      <Box w="60px">
                         <Progress value={row.avg} size="sm" colorScheme={row.avg > 60 ? "green" : row.avg > 30 ? "yellow" : "red"} />
                       </Box>
                     </Flex>
                   </Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">{row.users}</Td>
-                  <Td fontSize={{ sm: "14px" }} borderColor="transparent">
-                      <Flex gap="8px">
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "70px", md: "90px" }} textAlign="center" px={{ base: 2, md: 2 }}>{row.users}</Td>
+                  <Td fontSize={{ sm: "13px" }} borderColor="transparent" w={{ base: "90px", md: "110px" }} px={{ base: 2, md: 4 }}>
+                      <Flex gap="6px" justifyContent="center">
                         <Box cursor="pointer" onClick={() => navigate('/admin/quiz-management/edit', { state: { quiz: row } })}>
-                          <Icon as={MdEdit} color="blue.400" w={6} h={6} />
+                          <Icon as={MdEdit} color="blue.400" w={5} h={5} />
                         </Box>
-                        <Box cursor="pointer" onClick={() => handleDeleteQuiz(row)}><Icon as={MdDelete} color="red.400" w={6} h={6} /></Box>
+                        <Box cursor="pointer" onClick={() => handleDeleteQuiz(row)}><Icon as={MdDelete} color="red.400" w={5} h={5} /></Box>
                       </Flex>
                   </Td>
                 </Tr>

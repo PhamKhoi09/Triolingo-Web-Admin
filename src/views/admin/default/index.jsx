@@ -27,6 +27,7 @@ import {
   Flex,
   FormLabel,
   Icon,
+  Image,
   Select,
   SimpleGrid,
   useColorModeValue,
@@ -44,9 +45,9 @@ import {
   MdFileCopy,
   MdPerson,
 } from "react-icons/md";
-// Icons from assets
-import { ReactComponent as AppVersionIcon } from "assets/img/icons/app version.svg";
-import { ReactComponent as UsageTimeIcon } from "assets/img/icons/usage time.svg";
+// Icons from assets (use PNGs provided)
+import AppVersionPng from "assets/img/icons/app version.png";
+import UsageTimePng from "assets/img/icons/usage time.png";
 // Other components
 import DailyTraffic from "views/admin/default/components/DailyTraffic";
 import PieCard from "views/admin/default/components/PieCard";
@@ -83,7 +84,7 @@ export default function UserReports() {
                 w='64px'
                 h='64px'
                 bg={boxBg}
-                icon={<UsageTimeIcon width='36' height='36' style={{ color: brandColor }} />}
+                icon={<Image src={encodeURI(UsageTimePng)} boxSize='36px' objectFit='contain' alt='usage time' />}
               />
             }
             name='Average usage time (h/day)'
@@ -96,7 +97,7 @@ export default function UserReports() {
                 w='64px'
                 h='64px'
                 bg={boxBg}
-                icon={<AppVersionIcon width='36' height='36' style={{ color: brandColor }} />}
+                icon={<Image src={encodeURI(AppVersionPng)} boxSize='36px' objectFit='contain' alt='app version' />}
               />
             }
             name='Version app'

@@ -15,7 +15,7 @@ import {
 import { RiArrowUpSFill } from "react-icons/ri";
 
 export default function DailyTraffic(props) {
-  const { ...rest } = props;
+  const { trafficData, ...rest } = props;
 
   // Chakra Color Mode
   const textColor = useColorModeValue("secondaryGray.900", "white");
@@ -52,7 +52,7 @@ export default function DailyTraffic(props) {
       </Flex>
       <Box h='240px' mt='auto'>
         <BarChart
-          chartData={barChartDataDailyTraffic}
+          chartData={barChartDataDailyTraffic(trafficData)}
           chartOptions={barChartOptionsDailyTraffic}
         />
       </Box>

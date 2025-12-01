@@ -20,7 +20,7 @@ export default function Conversion(props) {
   return (
     <Card p='8px' align='center' direction='column' w='100%' {...rest}>
       <Flex
-        px={{ base: "0px", "2xl": "8px" }}
+        px={{ base: "8px", "2xl": "8px" }}
         justifyContent='space-between'
         alignItems='center'
         w='100%'
@@ -61,7 +61,7 @@ export default function Conversion(props) {
               Not started
             </Text>
           </Flex>
-          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
             23%
           </Text>
         </Flex>
@@ -79,7 +79,7 @@ export default function Conversion(props) {
               In progress
             </Text>
           </Flex>
-          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
             65%
           </Text>
         </Flex>
@@ -97,7 +97,7 @@ export default function Conversion(props) {
               Completed
             </Text>
           </Flex>
-          <Text fontSize={{ base: '12px', md: '14px' }} color='black' fontWeight='700'>
+          <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
             12%
           </Text>
         </Flex>
