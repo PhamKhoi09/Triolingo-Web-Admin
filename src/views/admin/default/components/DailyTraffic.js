@@ -38,7 +38,9 @@ export default function DailyTraffic(props) {
               fontSize='34px'
               fontWeight='700'
               lineHeight='100%'>
-              2.579
+              {(trafficData && trafficData.length)
+                ? String(trafficData.reduce((s, v) => s + Number(v || 0), 0)).toLocaleString()
+                : '2.579'}
             </Text>
             <Text
               ms='6px'

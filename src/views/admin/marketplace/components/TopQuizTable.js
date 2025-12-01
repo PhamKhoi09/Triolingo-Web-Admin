@@ -74,6 +74,10 @@ export default function TopQuizTable(props) {
     }),
   ];
   const [data, setData] = React.useState(() => [...defaultData]);
+  // Keep local data state in sync when parent provides new `tableData`
+  React.useEffect(() => {
+    setData(() => [...(tableData || [])]);
+  }, [tableData]);
   const table = useReactTable({
     data,
     columns,

@@ -8,7 +8,7 @@ import { VSeparator } from "components/separator/Separator";
 import React from "react";
 
 export default function Conversion(props) {
-  const { ...rest } = props;
+  const { completionRates = pieChartData, completionDetail = null, ...rest } = props;
 
   // Chakra Color Mode
   const textColor = useColorModeValue("secondaryGray.900", "white");
@@ -30,12 +30,40 @@ export default function Conversion(props) {
         </Text>
       </Flex>
 
-      <PieChart
-        h='200px'
-        w='100%'
-        chartData={pieChartData}
-        chartOptions={pieChartOptions}
-      />
+      {
+        (() => {
+          // Create a copy of the default options and inject a tooltip formatter
+          // that shows the raw counts from `completionDetail` instead of percentages.
+          const localOptions = Object.assign({}, pieChartOptions);
+          // Ensure tooltip object exists
+          localOptions.tooltip = Object.assign({}, pieChartOptions.tooltip || {});
+          // For pie charts, use y.formatter to control tooltip content
+          localOptions.tooltip.y = Object.assign({}, pieChartOptions.tooltip && pieChartOptions.tooltip.y ? pieChartOptions.tooltip.y : {});
+          localOptions.tooltip.y.formatter = (val, opts) => {
+            try {
+              const idx = opts && opts.seriesIndex != null ? opts.seriesIndex : 0;
+              const keys = ["notStarted", "inProgress", "completed"];
+              const key = keys[idx];
+              if (completionDetail && completionDetail[key] != null) {
+                return String(completionDetail[key]);
+              }
+            } catch (e) {
+              // fallthrough
+            }
+            // fallback to showing the percentage value
+            return String(val) + "%";
+          };
+
+          return (
+            <PieChart
+              h='200px'
+              w='100%'
+              chartData={completionRates}
+              chartOptions={localOptions}
+            />
+          );
+        })()
+      }
       <Card
         bg='#6E47FF'
         borderRadius='8px'
@@ -62,7 +90,7 @@ export default function Conversion(props) {
             </Text>
           </Flex>
           <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
-            23%
+            {completionRates && completionRates[0] != null ? `${completionRates[0]}%` : '0%'}
           </Text>
         </Flex>
 
@@ -80,7 +108,7 @@ export default function Conversion(props) {
             </Text>
           </Flex>
           <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
-            65%
+            {completionRates && completionRates[1] != null ? `${completionRates[1]}%` : '0%'}
           </Text>
         </Flex>
 
@@ -98,7 +126,7 @@ export default function Conversion(props) {
             </Text>
           </Flex>
           <Text fontSize={{ base: '12px', md: '14px' }} color='white' fontWeight='700'>
-            12%
+            {completionRates && completionRates[2] != null ? `${completionRates[2]}%` : '0%'}
           </Text>
         </Flex>
       </Card>

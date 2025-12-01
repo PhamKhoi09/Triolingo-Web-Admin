@@ -21,8 +21,9 @@
 
 */
 
-import React from "react";
+import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 // Chakra imports
 import {
   Box,
@@ -38,6 +39,7 @@ import {
   InputRightElement,
   Text,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 // Custom components
 import { HSeparator } from "components/separator/Separator";
@@ -47,6 +49,7 @@ import illustration from "assets/img/auth/auth.png";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
+import auth from "api/auth";
 
 function SignIn() {
   // Chakra color mode
@@ -67,6 +70,11 @@ function SignIn() {
   );
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const toast = useToast();
+  const navigate = useNavigate();
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>
       <Flex
@@ -81,7 +89,7 @@ function SignIn() {
         px={{ base: "25px", md: "0px" }}
         mt={{ base: "40px", md: "14vh" }}
         flexDirection='column'>
-        <Box me='auto'>
+          <Box me='auto'>
           <Heading color={textColor} fontSize='36px' mb='10px'>
             Sign In
           </Heading>
@@ -91,7 +99,7 @@ function SignIn() {
             color={textColorSecondary}
             fontWeight='400'
             fontSize='md'>
-            Enter your email and password to sign in!
+            Enter your username and password to sign in!
           </Text>
         </Box>
         <Flex
@@ -135,15 +143,17 @@ function SignIn() {
               fontWeight='500'
               color={textColor}
               mb='8px'>
-              Email<Text color={brandStars}>*</Text>
+              Username<Text color={brandStars}>*</Text>
             </FormLabel>
             <Input
               isRequired={true}
               variant='auth'
               fontSize='sm'
               ms={{ base: "0px", md: "0px" }}
-              type='email'
-              placeholder='mail@simmmple.com'
+              type='text'
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder='your-username'
               mb='24px'
               fontWeight='500'
               size='lg'
@@ -165,6 +175,8 @@ function SignIn() {
                 size='lg'
                 type={show ? "text" : "password"}
                 variant='auth'
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <InputRightElement display='flex' alignItems='center' mt='4px'>
                 <Icon
@@ -207,7 +219,28 @@ function SignIn() {
               fontWeight='500'
               w='100%'
               h='50'
-              mb='24px'>
+              mb='24px'
+              isLoading={loading}
+                onClick={async () => {
+                setLoading(true);
+                try {
+                  const data = await auth.signIn({ username, password });
+                  // Backend returns { message, accessToken, refreshToken }
+                  // Keep compatibility if backend uses `token` key.
+                  if (data && (data.accessToken || data.token)) {
+                    localStorage.setItem('token', data.accessToken || data.token);
+                  }
+                  if (data && data.refreshToken) {
+                    localStorage.setItem('refreshToken', data.refreshToken);
+                  }
+                  toast({ title: data && data.message ? data.message : 'Signed in', status: 'success', duration: 3000 });
+                  navigate('/admin/default');
+                } catch (err) {
+                  toast({ title: 'Sign in failed', description: err.message || String(err), status: 'error', duration: 5000 });
+                } finally {
+                  setLoading(false);
+                }
+              }}>
               Sign In
             </Button>
           </FormControl>

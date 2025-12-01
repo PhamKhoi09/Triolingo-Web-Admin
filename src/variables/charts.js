@@ -249,7 +249,12 @@ export const pieChartOptions = {
   },
   tooltip: {
     enabled: true,
-    theme: "dark",
+    // Use a light tooltip background with dark text for better contrast
+    theme: "light",
+    style: {
+      color: "#111827",
+      fontSize: "12px",
+    },
   },
 };
 
