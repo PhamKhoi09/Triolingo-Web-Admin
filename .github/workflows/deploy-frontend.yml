@@ -1,0 +1,119 @@
+name: Deploy Frontend to EC2
+
+on:
+  #push:
+  #  branches:
+  #    - main  # Trigger khi push code lên branch main
+  workflow_dispatch:  # Cho phép chạy manual từ GitHub UI
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy Frontend to EC2
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          # Tạo file private key từ secret
+          echo "$PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          
+          # SSH vào EC2 và thực hiện deployment
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << 'ENDSSH'
+            set -e  # Exit immediately if any command fails
+            
+            echo "========================================="
+            echo "Bắt đầu deployment Frontend..."
+            echo "========================================="
+            
+            # Di chuyển đến thư mục project
+            cd ~/Triolingo-Web-Admin || { echo "Không tìm thấy thư mục project"; exit 1; }
+            
+            echo "Fetching latest changes..."
+            git fetch origin main
+            
+            # Kiểm tra xem có thay đổi local không
+            if ! git diff --quiet HEAD origin/main; then
+              echo "Có code mới, đang update..."
+              
+              # Reset mọi thay đổi local và nhảy thẳng đến commit mới nhất
+              echo "Resetting to latest remote commit..."
+              git reset --hard origin/main
+              git clean -fd
+              
+              # Install dependencies
+              echo "Installing dependencies..."
+              # Thử npm ci trước, nếu fail thì dùng npm install
+              if ! npm ci 2>/dev/null; then
+                echo "npm ci failed, trying npm install instead..."
+                rm -f package-lock.json
+                npm install || { echo "npm install failed"; exit 1; }
+              fi
+              
+              # Build production
+              echo "Building production bundle..."
+              npm run build || { echo "Build failed"; exit 1; }
+              
+              # Backup build cũ (nếu có)
+              if [ -d /var/www/triolingo-admin ]; then
+                echo "Backing up old build..."
+                sudo rm -rf /var/www/triolingo-admin.bak 2>/dev/null || true
+                sudo cp -r /var/www/triolingo-admin /var/www/triolingo-admin.bak
+              fi
+              
+              # Deploy build mới
+              echo "Deploying new build..."
+              sudo rm -rf /var/www/triolingo-admin/*
+              sudo cp -r build/* /var/www/triolingo-admin/
+              
+              # Set permissions
+              echo "Setting permissions..."
+              sudo chown -R www-data:www-data /var/www/triolingo-admin
+              sudo chmod -R 755 /var/www/triolingo-admin
+              
+              # Test nginx configuration
+              echo "Testing Nginx configuration..."
+              sudo nginx -t || { echo "Nginx config test failed"; exit 1; }
+              
+              # Reload nginx để áp dụng thay đổi
+              echo "Reloading Nginx..."
+              sudo systemctl reload nginx
+              
+              echo "✓ Frontend deployment completed successfully!"
+            else
+              echo "Code đã up-to-date, không cần deploy"
+            fi
+            
+            # Show status
+            echo ""
+            echo "========================================="
+            echo "Deployment Status"
+            echo "========================================="
+            echo "Frontend: http://98.94.144.216"
+            echo "Backend API: http://98.94.144.216/api"
+            echo ""
+            echo "=== Nginx Status ==="
+            sudo systemctl status nginx --no-pager -l || true
+            echo ""
+            echo "=== PM2 Status (Backend) ==="
+            pm2 status || true
+            echo ""
+          ENDSSH
+          
+          # Xóa private key sau khi dùng xong
+          rm -f private_key.pem
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "Frontend deployment to EC2 was successful!"
+          else
+            echo "Frontend deployment to EC2 failed!"
+          fi

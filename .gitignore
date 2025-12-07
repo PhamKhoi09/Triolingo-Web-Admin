@@ -38,6 +38,10 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
+# Production build directory (React build output)
+# Uncomment if you don't want to commit build files
+# build/
+
 # Dependency directories
 node_modules/
 jspm_packages/
