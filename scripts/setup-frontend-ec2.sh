@@ -1,32 +1,29 @@
 #!/bin/bash
 
-# Script để setup Frontend Triolingo Web Admin trên EC2
-# Chạy script này MỘT LẦN đầu tiên khi setup frontend lên EC2
-# Yêu cầu: Backend đã được setup trước đó và đang chạy trên port 5001
+# Script để setup Frontend Triolingo Web Admin trên EC2 RIÊNG BIỆT
+# Chạy script này MỘT LẦN đầu tiên khi setup frontend lên EC2 MỚI
+# 
+# KIẾN TRÚC: Frontend EC2 (này) → Nginx proxy → Backend EC2 (khác)
+# 
+# YÊU CẦU TRƯỚC KHI CHẠY:
+# 1. EC2 Backend đã chạy và accessible qua IP public:port
+# 2. Security Group của Backend EC2 đã mở port 5001 cho Frontend EC2
+# 3. Đã cập nhật IP backend trong file nginx/triolingo.conf
 
 set -e  # Exit nếu có lỗi
 
 echo "========================================="
-echo "Setup Frontend Triolingo Web Admin trên EC2"
+echo "Setup Frontend Triolingo Web Admin"
+echo "Trên EC2 Riêng Biệt (Tách khỏi Backend)"
 echo "========================================="
 echo ""
 
-# Kiểm tra xem backend đã chạy chưa
-echo "Kiểm tra backend đang chạy..."
-if pm2 describe back-end-nt118 > /dev/null 2>&1; then
-  echo "✓ Backend đã chạy trên PM2"
-else
-  echo "⚠ WARNING: Backend chưa chạy hoặc chưa được setup với PM2!"
-  echo "Vui lòng setup backend trước khi tiếp tục."
-  read -p "Bạn có muốn tiếp tục không? (y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
-  fi
-fi
+# Không cần kiểm tra PM2 vì backend ở EC2 khác
+echo "ℹ️  Lưu ý: Script này dành cho EC2 frontend riêng biệt"
+echo "   Backend phải chạy trên EC2 khác và accessible qua network"
+echo ""
 
 # Install Nginx nếu chưa có
-echo ""
 echo "Cài đặt Nginx..."
 if ! command -v nginx &> /dev/null; then
   sudo apt update
@@ -36,16 +33,41 @@ else
   echo "✓ Nginx đã có sẵn"
 fi
 
-# Verify Node.js và npm đã được cài đặt (từ backend setup)
+# Verify Node.js và npm đã được cài đặt
 echo ""
 echo "Kiểm tra Node.js và npm..."
 if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-  echo "ERROR: Node.js hoặc npm chưa được cài đặt!"
-  echo "Vui lòng chạy backend setup script trước."
-  exit 1
+  echo "Node.js/npm chưa có, đang cài đặt..."
+  
+  # Install Node.js 20.x LTS
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt install -y nodejs
+  
+  echo "✓ Node.js version: $(node -v)"
+  echo "✓ NPM version: $(npm -v)"
+else
+  echo "✓ Node.js version: $(node -v)"
+  echo "✓ NPM version: $(npm -v)"
 fi
-echo "✓ Node.js version: $(node -v)"
-echo "✓ NPM version: $(npm -v)"
+
+# Tạo swap để tránh OOM khi build (quan trọng cho t2.micro)
+echo ""
+echo "Cấu hình swap memory (2GB)..."
+if ! swapon --show | grep -q '/swapfile'; then
+  sudo fallocate -l 2G /swapfile
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+  
+  # Làm swap permanent
+  if ! grep -q '/swapfile' /etc/fstab; then
+    echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+  fi
+  
+  echo "✓ Swap 2GB đã được tạo"
+else
+  echo "✓ Swap đã tồn tại"
+fi
 
 # Clone hoặc update repository
 echo ""
@@ -67,10 +89,10 @@ echo ""
 echo "Installing dependencies..."
 npm install
 
-# Build production
+# Build production với memory limit (phù hợp t2.micro)
 echo ""
-echo "Building production bundle..."
-npm run build
+echo "Building production bundle (có thể mất 3-5 phút)..."
+NODE_OPTIONS="--max-old-space-size=1536" npm run build
 
 # Tạo thư mục cho web root
 echo ""
@@ -92,7 +114,23 @@ echo ""
 echo "Configuring Nginx..."
 if [ -f /etc/nginx/sites-enabled/default ]; then
   echo "Backing up default nginx config..."
-  sudo mv /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.bak
+  sudo mv /etc/nginx/sites-enabled/default /etc/nginx/sites-enabled/default.bak 2>/dev/null || true
+fi
+
+# Kiểm tra IP backend trong nginx config
+echo ""
+echo "⚠️  QUAN TRỌNG: Kiểm tra cấu hình Backend IP..."
+if grep -q "server 98.94.144.216:5001" nginx/triolingo.conf; then
+  echo "✓ Phát hiện backend IP: 98.94.144.216:5001"
+  echo "  Nếu đây KHÔNG phải IP backend của bạn, hãy dừng lại và sửa file:"
+  echo "  nginx/triolingo.conf → upstream backend_server"
+  echo ""
+  read -p "Backend IP có đúng không? (y để tiếp tục, n để dừng) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Hãy sửa file nginx/triolingo.conf rồi chạy lại script này!"
+    exit 1
+  fi
 fi
 
 # Copy nginx config
@@ -125,9 +163,6 @@ echo "Checking services status..."
 echo ""
 echo "=== Nginx Status ==="
 sudo systemctl status nginx --no-pager -l || true
-echo ""
-echo "=== PM2 Status (Backend) ==="
-pm2 status || true
 
 echo ""
 echo "========================================="
@@ -135,8 +170,9 @@ echo "✓ Setup Frontend hoàn tất!"
 echo "========================================="
 echo ""
 echo "Thông tin triển khai:"
-echo "  - Frontend URL: http://98.94.144.216"
-echo "  - Backend API: http://98.94.144.216/api/*"
+echo "  - Frontend EC2: Máy này"
+echo "  - Frontend URL: http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR_FRONTEND_EC2_IP')"
+echo "  - Backend EC2: Máy khác (được proxy qua /api)"
 echo "  - Nginx config: /etc/nginx/sites-available/triolingo"
 echo "  - Web root: /var/www/triolingo-admin"
 echo ""
@@ -144,8 +180,11 @@ echo "Các lệnh hữu ích:"
 echo "  - Xem Nginx logs: sudo tail -f /var/log/nginx/triolingo-*.log"
 echo "  - Restart Nginx: sudo systemctl restart nginx"
 echo "  - Test Nginx config: sudo nginx -t"
-echo "  - Xem Backend logs: pm2 logs back-end-nt118"
-echo "  - Xem Backend status: pm2 status"
+echo "  - Test backend connectivity: curl http://BACKEND_IP:5001/api/health"
 echo ""
-echo "Lưu ý: Đảm bảo Security Group của EC2 đã mở port 80 (HTTP)"
+echo "⚠️  CẦN LÀM TIẾP:"
+echo "1. Mở port 80 trong Security Group của Frontend EC2 này"
+echo "2. Mở port 5001 trong Security Group của Backend EC2 (cho Frontend EC2)"
+echo "3. Test backend: curl http://BACKEND_IP:5001/api/health"
+echo "4. Truy cập frontend qua browser để kiểm tra"
 echo ""

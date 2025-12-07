@@ -3,7 +3,7 @@ name: Deploy Frontend to EC2
 on:
   #push:
   #  branches:
-  #    - main  # Trigger khi push code lên branch main
+  #    - main  # Uncomment để auto-deploy khi push code lên main
   workflow_dispatch:  # Cho phép chạy manual từ GitHub UI
 
 jobs:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Deploy Frontend to EC2
+      - name: Deploy Frontend to Dedicated EC2
         env:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
@@ -24,12 +24,13 @@ jobs:
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           
-          # SSH vào EC2 và thực hiện deployment
+          # SSH vào Frontend EC2 và thực hiện deployment
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} << 'ENDSSH'
             set -e  # Exit immediately if any command fails
             
             echo "========================================="
             echo "Bắt đầu deployment Frontend..."
+            echo "EC2 Frontend riêng biệt (tách khỏi Backend)"
             echo "========================================="
             
             # Di chuyển đến thư mục project
@@ -38,27 +39,26 @@ jobs:
             echo "Fetching latest changes..."
             git fetch origin main
             
-            # Kiểm tra xem có thay đổi local không
+            # Kiểm tra xem có thay đổi không
             if ! git diff --quiet HEAD origin/main; then
               echo "Có code mới, đang update..."
               
-              # Reset mọi thay đổi local và nhảy thẳng đến commit mới nhất
+              # Reset về commit mới nhất
               echo "Resetting to latest remote commit..."
               git reset --hard origin/main
               git clean -fd
               
               # Install dependencies
               echo "Installing dependencies..."
-              # Thử npm ci trước, nếu fail thì dùng npm install
               if ! npm ci 2>/dev/null; then
-                echo "npm ci failed, trying npm install instead..."
+                echo "npm ci failed, trying npm install..."
                 rm -f package-lock.json
                 npm install || { echo "npm install failed"; exit 1; }
               fi
               
-              # Build production
+              # Build production với memory limit
               echo "Building production bundle..."
-              npm run build || { echo "Build failed"; exit 1; }
+              NODE_OPTIONS="--max-old-space-size=1536" npm run build || { echo "Build failed"; exit 1; }
               
               # Backup build cũ (nếu có)
               if [ -d /var/www/triolingo-admin ]; then
@@ -95,14 +95,12 @@ jobs:
             echo "========================================="
             echo "Deployment Status"
             echo "========================================="
-            echo "Frontend: http://98.94.144.216"
-            echo "Backend API: http://98.94.144.216/api"
+            FRONTEND_IP=$(curl -s ifconfig.me 2>/dev/null || echo "FRONTEND_EC2_IP")
+            echo "Frontend: http://${FRONTEND_IP}"
+            echo "Backend: Chạy trên EC2 khác"
             echo ""
             echo "=== Nginx Status ==="
             sudo systemctl status nginx --no-pager -l || true
-            echo ""
-            echo "=== PM2 Status (Backend) ==="
-            pm2 status || true
             echo ""
           ENDSSH
           
@@ -113,7 +111,7 @@ jobs:
         if: always()
         run: |
           if [ ${{ job.status }} == 'success' ]; then
-            echo "Frontend deployment to EC2 was successful!"
+            echo "✓ Frontend deployment to dedicated EC2 was successful!"
           else
-            echo "Frontend deployment to EC2 failed!"
+            echo "✗ Frontend deployment failed!"
           fi
