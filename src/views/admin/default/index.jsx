@@ -127,7 +127,7 @@ export default function UserReports() {
   // (debug states removed)
 
   // General stats for the top cards (fallbacks match current hardcoded values)
-  const [totalUsersValue, setTotalUsersValue] = React.useState(() => '1,234');
+  const [totalUsersValue, setTotalUsersValue] = React.useState(() => '0');
   const [ratingValue, setRatingValue] = React.useState(() => '4.5');
   const [ratingCount, setRatingCount] = React.useState(() => '0');
   const [appVersionValue, setAppVersionValue] = React.useState(() => '1.0.3');

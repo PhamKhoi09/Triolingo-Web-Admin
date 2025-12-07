@@ -97,13 +97,7 @@ export default function UserManagement() {
 	};
 
 	// Local fallback users. The real API will only provide `username` and `status`.
-	const initialUsers = [
-		{ username: 'maddison_c21', avatar: avatar1, status: 'Online', name: 'Maddison C', job: 'UX Designer' },
-		{ username: 'karl.will02', avatar: avatar2, status: 'Online', name: 'Karl Will', job: 'Frontend Dev' },
-		{ username: 'andreea.1z', avatar: avatar3, status: 'Offline', name: 'Andreea Z', job: 'Illustrator' },
-		{ username: 'abraham47.y', avatar: avatar4, status: 'Online', name: 'Abraham Y', job: 'Product Manager' },
-		{ username: 'simmnple.web', avatar: avatar5, status: 'Offline', name: 'Simmmple', job: 'Brand' },
-	];
+	const initialUsers = [];
 
 	const [users, setUsers] = useState(initialUsers);
 
