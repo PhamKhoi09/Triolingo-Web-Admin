@@ -15,7 +15,7 @@
 
 set -e  # Exit nếu có lỗi
 
-BACKEND_IP="98.94.144.216"  # ← CẬP NHẬT IP BACKEND CỦA BẠN Ở ĐÂY
+BACKEND_IP="98.94.144.216" 
 
 echo "============================================"
 echo "Deploy Frontend Triolingo Web Admin"
