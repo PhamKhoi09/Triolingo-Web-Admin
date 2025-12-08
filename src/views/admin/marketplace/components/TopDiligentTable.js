@@ -63,7 +63,7 @@ export default function TopDiligentTable(props) {
           fontSize={{ sm: '10px', lg: '12px' }}
           color="gray.400"
         >
-          USAGE
+          STREAK
         </Text>
       ),
       cell: (info) => (
@@ -74,6 +74,10 @@ export default function TopDiligentTable(props) {
     }),
   ];
   const [data, setData] = React.useState(() => [...defaultData]);
+  // Keep local data state in sync when parent provides new `tableData`
+  React.useEffect(() => {
+    setData(() => [...(tableData || [])]);
+  }, [tableData]);
   const table = useReactTable({
     data,
     columns,
@@ -101,7 +105,7 @@ export default function TopDiligentTable(props) {
         boxShadow="0px 40px 58px -20px rgba(112, 144, 176, 0.26)"
       >
         <Text color={textColor} fontSize="xl" fontWeight="600">
-          Top Diligent
+          Top Streak
         </Text>
         <Button variant="action">See all</Button>
       </Flex>

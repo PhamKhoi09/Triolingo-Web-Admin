@@ -23,7 +23,7 @@ import { MdSearch, MdArrowUpward, MdArrowDownward, MdArrowForward } from 'react-
 
 import Card from 'components/card/Card.js';
 import MiniStatistics from 'components/card/MiniStatistics';
-import IconBox from 'components/icons/IconBox';
+import { getAvatarForUsernameConsistent } from 'utils/avatarMapper';
 
 import avatar1 from 'assets/img/avatars/avatar1.png';
 import avatar2 from 'assets/img/avatars/avatar2.png';
@@ -32,25 +32,72 @@ import avatar4 from 'assets/img/avatars/avatar4.png';
 import avatar5 from 'assets/img/avatars/avatar5.png';
 
 export default function UserManagement() {
-	const boxBg = useColorModeValue('secondaryGray.300', 'whiteAlpha.100');
 	const searchBg = useColorModeValue('white', 'gray.700');
 	const searchShadow = useColorModeValue('0px 6px 14px rgba(2,6,23,0.06)', '0px 6px 14px rgba(255,255,255,0.04)');
 	const searchHover = useColorModeValue('0px 10px 20px rgba(2,6,23,0.08)', '0px 10px 20px rgba(255,255,255,0.06)');
-	const brandColor = useColorModeValue('brand.500', 'white');
 	const statBoxBg = useColorModeValue('white', 'gray.800');
 	const statBoxShadow = useColorModeValue('0px 10px 20px rgba(2,6,23,0.08)', 'none');
 
 	const navigate = useNavigate();
 	// Create user feature removed
 
+	const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+
+	const formatPercent = (value) => {
+		if (!isFinite(value)) return '0%';
+		const rounded = Number(value.toFixed(1));
+		const sign = rounded >= 0 ? '+' : '';
+		return `${sign}${rounded}%`;
+	};
+
+	const statusFor = (value, positiveIsGood = true) => {
+		if (positiveIsGood) {
+			if (value >= 5) return 'good';
+			if (value >= -2) return 'normal';
+			return 'concerned';
+		}
+		if (value <= -5) return 'concerned';
+		if (value <= 0) return 'normal';
+		return 'good';
+	};
+
+	const computeStats = (userList, activity) => {
+		const learners = (userList || []).filter((u) => (u.role || 'Learner') !== 'Admin');
+		const totalLearners = learners.length;
+		const newRegistrations = Number(activity?.newRegistrations || 0);
+		const deletedAccounts = Number(activity?.deletedAccounts || 0);
+
+		// Previous total approximates yesterday's pool before the last 24h flow.
+		const previousTotal = Math.max(totalLearners - newRegistrations + deletedAccounts, 0);
+		const netChange = newRegistrations - deletedAccounts;
+		const totalGrowthValue = previousTotal > 0 ? (netChange / previousTotal) * 100 : netChange > 0 ? 100 : 0;
+		const newGrowthValue = previousTotal > 0 ? (newRegistrations / previousTotal) * 100 : newRegistrations > 0 ? 100 : 0;
+		const deletedGrowthValue = previousTotal > 0 ? -(deletedAccounts / previousTotal) * 100 : deletedAccounts > 0 ? -100 : 0;
+
+		return [
+			{
+				name: 'Total Learner',
+				value: numberFormatter.format(totalLearners),
+				growth: formatPercent(totalGrowthValue),
+				status: statusFor(totalGrowthValue, true),
+			},
+			{
+				name: 'New Users',
+				value: String(newRegistrations),
+				growth: formatPercent(newGrowthValue),
+				status: statusFor(newGrowthValue, true),
+			},
+			{
+				name: 'Deleted Users',
+				value: String(deletedAccounts),
+				growth: formatPercent(deletedGrowthValue),
+				status: statusFor(deletedGrowthValue, false),
+			},
+		];
+	};
+
 	// Local fallback users. The real API will only provide `username` and `status`.
-	const initialUsers = [
-		{ username: 'maddison_c21', avatar: avatar1, status: 'Online', name: 'Maddison C', job: 'UX Designer' },
-		{ username: 'karl.will02', avatar: avatar2, status: 'Online', name: 'Karl Will', job: 'Frontend Dev' },
-		{ username: 'andreea.1z', avatar: avatar3, status: 'Offline', name: 'Andreea Z', job: 'Illustrator' },
-		{ username: 'abraham47.y', avatar: avatar4, status: 'Online', name: 'Abraham Y', job: 'Product Manager' },
-		{ username: 'simmnple.web', avatar: avatar5, status: 'Offline', name: 'Simmmple', job: 'Brand' },
-	];
+	const initialUsers = [];
 
 	const [users, setUsers] = useState(initialUsers);
 
@@ -83,23 +130,20 @@ export default function UserManagement() {
 					if (items.length) {
 						// Remove soft-deleted users (isDeleted === true) from the list
 						const visible = items.filter((u) => !u.isDeleted);
-						const mapped = visible.map((u) => ({
-							username: u.username || u.userName || u.email || (u._id ? String(u._id) : undefined),
-							_id: u._id || u.id || (u._id ? String(u._id) : undefined),
-							id: u._id || u.id || (u._id ? String(u._id) : undefined),
-							avatar: u.avatar || u.avatarUrl || u.photo || null,
-							status: u.status || (u.isOnline ? 'Online' : 'Offline') || 'Offline',
-							name: u.name || u.fullName || u.displayName || undefined,
-							job: u.job || u.title || undefined,
-							role: u.role && String(u.role).toLowerCase() === 'admin' ? 'Admin' : 'Learner',
-							email: u.email || u.emailAddress || undefined,
-							currentTopic: u.currentTopic || undefined,
-							createdAt: u.createdAt || u.created_at || u.dateCreated || undefined,
-						}));
-						setUsers(mapped);
-						// compute Total Learner from mapped list (role === 'Learner')
-						const learners = mapped.filter((m) => m.role === 'Learner').length;
-						setStats((prev) => prev.map((s) => (s.name === 'Total Learner' ? { ...s, value: String(learners) } : s)));
+					const mapped = visible.map((u) => ({
+						username: u.username || u.userName || u.email || (u._id ? String(u._id) : undefined),
+						_id: u._id || u.id || (u._id ? String(u._id) : undefined),
+						id: u._id || u.id || (u._id ? String(u._id) : undefined),
+						avatar: getAvatarForUsernameConsistent(u.username || u.userName || u.email),
+						status: u.status || (u.isOnline ? 'Online' : 'Offline') || 'Offline',
+						name: u.name || u.fullName || u.displayName || undefined,
+						job: u.job || u.title || undefined,
+						role: u.role && String(u.role).toLowerCase() === 'admin' ? 'Admin' : 'Learner',
+						email: u.email || u.emailAddress || undefined,
+						currentTopic: u.currentTopic || undefined,
+						createdAt: u.createdAt || u.created_at || u.dateCreated || undefined,
+					}));
+							setUsers(mapped);
 					}
 				}
 			} catch (err) {
@@ -113,37 +157,13 @@ export default function UserManagement() {
 		};
 	}, []);
 
-	// Statistics will be provided by an API endpoint in the future.
-	// For now we use default values; when the backend is ready
-	// this component will fetch `/api/admin/user-stats` and replace them.
-	const [stats, setStats] = useState([
-		{ name: 'Total Learner', value: '20K', growth: '+7.9%', status: 'good' },
-		{ name: 'New Users', value: '936', growth: '+3.4%', status: 'normal' },
-		{ name: 'Deleted Users', value: '581', growth: '+12.8%', status: 'concerned' },
-	]);
+	const [activity24h, setActivity24h] = useState({ newRegistrations: 0, deletedAccounts: 0 });
 
-	// Track deleted-24h count for display
-	const [deleted24Count, setDeleted24Count] = useState(0);
+	const stats = useMemo(() => computeStats(users, activity24h), [users, activity24h]);
 
 	useEffect(() => {
 		let mounted = true;
-		async function loadStats() {
-			try {
-				const res = await fetch('/api/admin/user-stats');
-				if (!mounted) return;
-				if (res.ok) {
-					const data = await res.json();
-					// Expecting an array of stats like the default above
-					if (Array.isArray(data)) setStats(data);
-				}
-			} catch (err) {
-				// Endpoint not available yet — keep defaults
-			}
-		}
 
-		loadStats();
-
-		// Also fetch last 24h user activity (new registrations / deleted accounts)
 		async function loadActivity24h() {
 			try {
 				const token = localStorage.getItem('token');
@@ -153,13 +173,10 @@ export default function UserManagement() {
 				if (resp.ok) {
 					const body = await resp.json();
 					if (body && body.last24h) {
-						const deleted = Number(body.last24h.deletedAccounts || 0);
-						setDeleted24Count(deleted);
-						setStats((prev) => prev.map((s) => {
-							if (s.name === 'New Users') return { ...s, value: String(body.last24h.newRegistrations || 0) };
-							if (s.name === 'Deleted Users') return { ...s, value: String(deleted) };
-							return s;
-						}));
+						setActivity24h({
+							newRegistrations: Number(body.last24h.newRegistrations || 0),
+							deletedAccounts: Number(body.last24h.deletedAccounts || 0),
+						});
 					}
 				}
 			} catch (e) {

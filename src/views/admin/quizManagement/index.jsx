@@ -62,6 +62,9 @@ export default function QuizManagement() {
   const textColor = useColorModeValue("secondaryGray.900", "white");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.100");
   const rowHoverBg = useColorModeValue("gray.50", "whiteAlpha.50");
+  const grayTextColor = useColorModeValue("gray.600", "white");
+  const tableTextColor = useColorModeValue("gray.500", "whiteAlpha.800");
+  const isDarkMode = useColorModeValue(false, true);
   const [expandedRows, setExpandedRows] = useState({});
   const [sortBy, setSortBy] = useState(null);
   const [sortDir, setSortDir] = useState("desc");
@@ -392,53 +395,53 @@ export default function QuizManagement() {
         </Flex>
 
           <Box px={{ base: 2, md: 6 }}>
-            <Table variant="simple" color="gray.500" mb="24px" mt="12px" tableLayout="auto" size="sm" w="100%">
+            <Table variant="simple" color={tableTextColor} mb="24px" mt="12px" tableLayout="auto" size="sm" w="100%">
             <Thead>
               <Tr>
                 <Th borderColor={borderColor} onClick={() => handleSort("id")} cursor="pointer" w={{ base: "56px", md: "72px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px" justifyContent="center">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Quiz ID</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Quiz ID</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "id" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} onClick={() => handleSort("displayName")} cursor="pointer" w={{ base: "120px", md: "180px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px" justifyContent="center">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Quiz name</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Quiz name</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "displayName" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} onClick={() => handleSort("questions")} cursor="pointer" w={{ base: "70px", md: "90px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px" justifyContent="center">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600"># Questions</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600"># Questions</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "questions" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} onClick={() => handleSort("topics")} cursor="pointer" w={{ base: "140px", md: "220px" }} px={{ base: 2, md: 4 }} whiteSpace="nowrap" textAlign="center">
                   <Flex align="center" justifyContent="center" gap="6px">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Topics</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Topics</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "topics" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} onClick={() => handleSort("types")} cursor="pointer" w={{ base: "80px", md: "80px" }} px={{ base: 2, md: 4 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Types</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Types</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "types" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} w={{ base: "8px", md: "90px" }} px={0} />
                 <Th borderColor={borderColor} onClick={() => handleSort("avg")} cursor="pointer" w={{ base: "100px", md: "100px" }} px={{ base: 2, md: 2 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Avg</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Avg</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "avg" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
                 <Th borderColor={borderColor} onClick={() => handleSort("users")} cursor="pointer" w={{ base: "90px", md: "90px" }} textAlign="center" px={{ base: 2, md: 4 }} whiteSpace="nowrap">
                   <Flex align="center" gap="6px">
-                    <Text color="gray.600" fontSize="11px" fontWeight="600">Users</Text>
+                    <Text color={grayTextColor} fontSize="11px" fontWeight="600">Users</Text>
                     <Image src={ArrowIcon} alt="sort" boxSize="18px" transform={sortBy === "users" && sortDir === "asc" ? "rotate(180deg)" : "none"} opacity={0.7} />
                   </Flex>
                 </Th>
-                <Th borderColor={borderColor} w={{ base: "90px", md: "110px" }} px={{ base: 2, md: 4 }}><Text color="gray.600" fontSize="11px" fontWeight="600">Actions</Text></Th>
+                <Th borderColor={borderColor} w={{ base: "90px", md: "110px" }} px={{ base: 2, md: 4 }}><Text color={grayTextColor} fontSize="11px" fontWeight="600">Actions</Text></Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -537,7 +540,7 @@ export default function QuizManagement() {
                           )}
                         </>
                       ) : (
-                        <Text color="gray.400">-</Text>
+                        <Text color={grayTextColor}>-</Text>
                       )}
                     </Flex>
                   </Td>
@@ -584,7 +587,7 @@ export default function QuizManagement() {
                                 objectFit="contain"
                                 mr="8px"
                                 opacity={on ? 1 : 0.18}
-                                filter={on ? "none" : "grayscale(100%)"}
+                                filter={on ? "none" : isDarkMode ? "grayscale(100%) brightness(1.5)" : "grayscale(100%)"}
                               />
                             );
                           });
@@ -647,7 +650,7 @@ export default function QuizManagement() {
                 ))}
               </Select>
             )}
-            <Text fontSize="sm" color="gray.500" mt={2}>If no topics available, you can still create and add topics later.</Text>
+            <Text fontSize="sm" color={grayTextColor} mt={2}>If no topics available, you can still create and add topics later.</Text>
           </Box>
           <Box mb={3}>
             <Text mb={2} fontWeight={600}>Passing score (%)</Text>

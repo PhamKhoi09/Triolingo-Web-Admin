@@ -58,8 +58,9 @@ import PieCard from "views/admin/default/components/PieCard";
 import Card from "components/card/Card.js";
 import TopDiligentTable from "views/admin/marketplace/components/TopDiligentTable";
 import TopQuizTable from "views/admin/marketplace/components/TopQuizTable";
-import tableDataTopDiligent from "views/admin/marketplace/variables/tableDataTopDiligent.json";
+
 import tableDataTopQuiz from "views/admin/marketplace/variables/tableDataTopQuiz.json";
+import { getAvatarForUsernameConsistent } from "utils/avatarMapper";
 // Backend base URL: can be overridden by setting REACT_APP_API_BASE
 // In development leave empty so `fetch('/admin/...')` is proxied by CRA dev server.
 const BACKEND_BASE = process.env.REACT_APP_API_BASE || "";
@@ -94,9 +95,20 @@ async function fetchWithFallback(path, options = {}) {
 
 function mapTopQuizResponse(arr = []) {
   return arr.map((u) => ({
-    name: [u.username || u.email || "Unknown", u.avatarUrl || null],
+    name: [u.username || u.email || "Unknown", getAvatarForUsernameConsistent(u.username)],
     level: Number(u.passedCount) || 0,
   }));
+}
+
+function mapTopStreakResponse(arr = []) {
+  return arr
+    .filter((u) => !u.isDeleted && u.role === 'user')
+    .sort((a, b) => (b.streak || 0) - (a.streak || 0))
+    .slice(0, 10)
+    .map((u) => ({
+      name: [u.username || u.email || "Unknown", getAvatarForUsernameConsistent(u.username)],
+      usage: u.streak || 0,
+    }));
 }
 
 export default function UserReports() {
@@ -104,6 +116,7 @@ export default function UserReports() {
   const brandColor = useColorModeValue("brand.500", "white");
   const boxBg = useColorModeValue("secondaryGray.300", "whiteAlpha.100");
   const [topQuizData, setTopQuizData] = React.useState(() => [...tableDataTopQuiz]);
+  const [topStreakData, setTopStreakData] = React.useState([]);
 
   // Completion rate for pie chart
   const [completionRates, setCompletionRates] = React.useState(null); // [notStarted, inProgress, completed]
@@ -114,7 +127,7 @@ export default function UserReports() {
   // (debug states removed)
 
   // General stats for the top cards (fallbacks match current hardcoded values)
-  const [totalUsersValue, setTotalUsersValue] = React.useState(() => '1,234');
+  const [totalUsersValue, setTotalUsersValue] = React.useState(() => '0');
   const [ratingValue, setRatingValue] = React.useState(() => '4.5');
   const [ratingCount, setRatingCount] = React.useState(() => '0');
   const [appVersionValue, setAppVersionValue] = React.useState(() => '1.0.3');
@@ -133,6 +146,36 @@ export default function UserReports() {
     const version = obj.version ?? obj.appVersion ?? obj.app_version ?? obj.appVersionString ?? obj.app_version_string ?? null;
     return { totalUsers, ratingAverage, ratingCnt, version };
   }
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function loadTopStreak() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.warn('[Dashboard] No admin token found for top streak');
+          return;
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+        console.log('[Dashboard] Fetching top streak from /api/admin/users');
+        const res = await fetchWithFallback('/api/admin/users', { method: 'GET', headers });
+        const rawText = await res.text();
+        let parsed;
+        try { parsed = rawText ? JSON.parse(rawText) : null; } catch (e) { parsed = rawText; }
+        if (!mounted) return;
+        if (!res.ok) throw new Error(rawText || res.statusText || 'Network response was not ok');
+        const data = parsed && parsed.data ? parsed.data : [];
+        console.log('[Dashboard] Top streak raw data:', data);
+        const mapped = mapTopStreakResponse(data);
+        console.log('[Dashboard] Top streak mapped:', mapped);
+        setTopStreakData(mapped);
+      } catch (err) {
+        console.error('[Dashboard] Failed to load top streak', err);
+      }
+    }
+    loadTopStreak();
+    return () => { mounted = false; };
+  }, []);
 
   React.useEffect(() => {
     let mounted = true;
@@ -353,7 +396,7 @@ export default function UserReports() {
       {/* Dashboard main sections */}
       <SimpleGrid columns={{ base: 1, md: 3 }} gap='20px' mb='20px'>
         <Card px='0px' mb='20px'>
-          <TopDiligentTable tableData={tableDataTopDiligent} />
+          <TopDiligentTable tableData={topStreakData} />
         </Card>
 
           <Card px='0px' mb='20px'>

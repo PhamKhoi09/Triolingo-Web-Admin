@@ -74,6 +74,10 @@ export default function EditQuiz() {
   const rowOddBg = useColorModeValue("rgba(99,102,241,0.06)", "rgba(99,102,241,0.06)");
   const pageBg = useColorModeValue("purple.200", "purple.800");
   const cardBg = useColorModeValue("white", "gray.800");
+  const grayTextColor = useColorModeValue("gray.600", "white");
+  const grayLightColor = useColorModeValue("gray.500", "whiteAlpha.800");
+  const grayDarkColor = useColorModeValue("gray.400", "whiteAlpha.700");
+  const isDarkMode = useColorModeValue(false, true);
   // Configuration: how many question IDs per quiz block by default.
   // For example, blockSize=20 means quiz 1 has IDs 1..20, quiz 2 has 21..40, etc.
   const QUESTION_BLOCK_SIZE = 20;
@@ -875,7 +879,7 @@ export default function EditQuiz() {
                 <Flex align="center" gap="12px">
                   <Image src={topicThumb} boxSize={{ base: "56px", md: "64px" }} borderRadius="8px" objectFit="cover" />
                   <Box ml={{ base: 0, md: 2 }}>
-                    <Text fontWeight={700} mt="6px">{topicName}</Text>
+                    <Text fontWeight={700} mt="6px" color="black">{topicName}</Text>
                     <Text color="blue.500" mt="6px">{(i + 1) * 10} words</Text>
                   </Box>
                 </Flex>
@@ -909,7 +913,7 @@ export default function EditQuiz() {
           <Menu />
         </Flex>
         <Box px="25px" pb="20px">
-          <Table variant="simple" color="gray.700" mb="24px">
+          <Table variant="simple" color={grayLightColor} mb="24px">
             <Thead>
               <Tr>
                 <Th>No</Th>
@@ -1177,7 +1181,7 @@ export default function EditQuiz() {
                             placeholder="(flip letters to build answer)"
                             mb={3}
                           />
-                          <Text fontSize="sm" color="gray.600" mb={2}>Student's view</Text>
+                          <Text fontSize="sm" color={grayTextColor} mb={2}>Student's view</Text>
                           <Flex gap={2} flexWrap="wrap">
                             {((fillPromptLocal || "") || "").split("").map((_, i) => {
                               const prompt = (fillPromptLocal || "") || "";
@@ -1371,14 +1375,14 @@ export default function EditQuiz() {
                   <>
                     <InputGroup mb={4}>
                       <InputLeftElement pointerEvents="none">
-                        <Icon as={MdSearch} color="gray.400" />
+                        <Icon as={MdSearch} color={grayDarkColor} />
                       </InputLeftElement>
                       <Input placeholder="Search topics..." value={topicSearch} onChange={(e) => setTopicSearch(e.target.value)} />
                     </InputGroup>
 
                     {filteredTopicOptions.length === 0 ? (
                       <Box textAlign="center" py={12}>
-                        <Text mb={3} color="gray.600">No topics available from the API.</Text>
+                        <Text mb={3} color={grayTextColor}>No topics available from the API.</Text>
                         <Button onClick={handleOpenTopics} colorScheme="purple">Retry</Button>
                       </Box>
                     ) : (
@@ -1398,7 +1402,7 @@ export default function EditQuiz() {
                           >
                             <Image src={t.thumbnail || getTopicImage(t.name)} alt={t.name} mb={2} borderRadius="sm" />
                             <Text fontWeight="bold">{t.name}</Text>
-                            {t.description ? <Text fontSize="sm" color="gray.500">{t.description}</Text> : null}
+                            {t.description ? <Text fontSize="sm" color={grayLightColor}>{t.description}</Text> : null}
                           </Box>
                         ))}
                       </SimpleGrid>
@@ -1448,7 +1452,7 @@ export default function EditQuiz() {
                           <Image src={opt.icon} boxSize="36px" alt={opt.title} />
                           <Box>
                             <Text fontWeight={700}>{opt.title}</Text>
-                            <Text fontSize="sm" color="gray.600">{opt.desc}</Text>
+                            <Text fontSize="sm" color={grayTextColor}>{opt.desc}</Text>
                           </Box>
                         </Flex>
                       </Box>

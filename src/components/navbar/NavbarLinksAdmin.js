@@ -20,6 +20,8 @@ import { SearchBar } from 'components/navbar/searchBar/SearchBar';
 import { SidebarResponsive } from 'components/sidebar/Sidebar';
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@chakra-ui/react';
 // Assets
 import navImage from 'assets/img/layout/Navbar.png';
 import { MdNotificationsNone, MdInfoOutline } from 'react-icons/md';
@@ -29,6 +31,100 @@ import routes from 'routes';
 export default function HeaderLinks(props) {
   const { secondary } = props;
   const { colorMode, toggleColorMode } = useColorMode();
+  const currentUser = localStorage.getItem('currentUser') || 'User';
+  const navigate = useNavigate();
+  const toast = useToast();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (!refreshToken) {
+        toast({ title: 'No refresh token found', status: 'error', duration: 3000 });
+        return;
+      }
+
+      const response = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        // Clear all auth-related data from localStorage
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem(`userStatus_${currentUser}`);
+        
+        toast({ title: 'Logged out successfully', status: 'success', duration: 3000 });
+        navigate('/auth/sign-in');
+      } else {
+        toast({ title: 'Logout failed', status: 'error', duration: 3000 });
+      }
+    } catch (error) {
+      toast({ title: 'Logout error', description: error.message || String(error), status: 'error', duration: 3000 });
+      navigate('/auth/sign-in');
+    }
+  };
+
+  const handleProfileSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast({ title: 'No authentication token found', status: 'error', duration: 3000 });
+        return;
+      }
+
+      const response = await fetch('/api/admin/users', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : Array.isArray(data && data.data) ? data.data : [];
+        
+        // Find the current user in the list
+        const userInfo = items.find(u => 
+          (u.username || u.userName || u.email) === currentUser
+        );
+
+        if (userInfo) {
+          const userData = {
+            username: userInfo.username || userInfo.userName || userInfo.email || currentUser,
+            _id: userInfo._id || userInfo.id,
+            id: userInfo._id || userInfo.id,
+            avatar: userInfo.avatar || userInfo.avatarUrl || userInfo.photo,
+            status: userInfo.status || (userInfo.isOnline ? 'Online' : 'Offline') || 'Offline',
+            name: userInfo.name || userInfo.fullName || userInfo.displayName,
+            job: userInfo.job || userInfo.title,
+            role: userInfo.role && String(userInfo.role).toLowerCase() === 'admin' ? 'Admin' : 'Learner',
+            email: userInfo.email || userInfo.emailAddress,
+            currentTopic: userInfo.currentTopic,
+            createdAt: userInfo.createdAt || userInfo.created_at || userInfo.dateCreated,
+          };
+          navigate('/admin/user-management/profile', { state: { user: userData } });
+        } else {
+          toast({ title: 'User not found', status: 'warning', duration: 3000 });
+          navigate('/admin/user-management/profile', { state: { user: { username: currentUser } } });
+        }
+      } else {
+        toast({ title: 'Failed to fetch user data', status: 'error', duration: 3000 });
+        navigate('/admin/user-management/profile', { state: { user: { username: currentUser } } });
+      }
+    } catch (error) {
+      toast({ title: 'Error fetching user data', description: error.message || String(error), status: 'error', duration: 3000 });
+      navigate('/admin/user-management/profile', { state: { user: { username: currentUser } } });
+    }
+  };
+
   // Chakra Color Mode
   const navbarIcon = useColorModeValue('gray.400', 'white');
   let menuBg = useColorModeValue('white', 'navy.800');
@@ -270,7 +366,7 @@ export default function HeaderLinks(props) {
               fontWeight="700"
               color={textColor}
             >
-              👋&nbsp; Hey, Adela
+              👋&nbsp; Hey, {currentUser}
             </Text>
           </Flex>
           <Flex flexDirection="column" p="10px">
@@ -279,16 +375,9 @@ export default function HeaderLinks(props) {
               _focus={{ bg: 'none' }}
               borderRadius="8px"
               px="14px"
+              onClick={handleProfileSettings}
             >
               <Text fontSize="sm">Profile Settings</Text>
-            </MenuItem>
-            <MenuItem
-              _hover={{ bg: 'none' }}
-              _focus={{ bg: 'none' }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Text fontSize="sm">Newsletter Settings</Text>
             </MenuItem>
             <MenuItem
               _hover={{ bg: 'none' }}
@@ -296,6 +385,7 @@ export default function HeaderLinks(props) {
               color="red.400"
               borderRadius="8px"
               px="14px"
+              onClick={handleLogout}
             >
               <Text fontSize="sm">Log out</Text>
             </MenuItem>
